@@ -1,0 +1,17 @@
+{
+  "include": [
+    "exports/**/*.js",
+    "types/**/*.d.ts"
+  ],
+  "compilerOptions": {
+    "strict": true,
+    "target": "ESNext",
+    "allowSyntheticDefaultImports": true,
+    "moduleResolution": "nodenext",
+    "lib": ["ESNext", "DOM"],
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "allowJs": true,
+    "verbatimModuleSyntax": true
+  }
+}
