@@ -6,7 +6,7 @@ import { offsetParent } from 'composed-offset-position';
  * @param {Element} el - The element to check if it's tabbable
  * @returns {boolean}
  */
-function isTabbable(el) {
+export function isTabbable(el) {
   const tag = el.tagName.toLowerCase();
 
   // Elements with a -1 tab index are not tabbable
@@ -31,7 +31,11 @@ function isTabbable(el) {
 
   // Elements that are hidden have no offsetParent and are not tabbable
   // offsetParent() is added because otherwise it misses elements in Safari
-  if (el.offsetParent === null && offsetParent(el) === null) {
+  if (
+    (/** @type {HTMLElement} */ (el)).offsetParent == null
+    && offsetParent(/** @type {HTMLElement} */ (el)) == null
+  )
+  {
     return false;
   }
 
@@ -62,63 +66,88 @@ function isTabbable(el) {
 /**
  * Returns the first and last bounding elements that are tabbable. This is more performant than checking every single
  * element because it short-circuits after finding the first and last ones.
+ * @param {HTMLElement | ShadowRoot} root
  */
-export function getTabbableBoundary(root: HTMLElement | ShadowRoot) {
+export function getTabbableBoundary(root) {
   const tabbableElements = getTabbableElements(root);
 
   // Find the first and last tabbable elements
-  const start = tabbableElements[0] ?? null;
-  const end = tabbableElements[tabbableElements.length - 1] ?? null;
+  let start = null;
+  let end = null;
+
+  while (true) {
+    const current = tabbableElements.next().value
+    if (!start) {
+      start = current
+    }
+
+    if (tabbableElements.next().done) {
+      end = current
+      break
+    }
+  }
 
   return { start, end };
 }
 
-export function getTabbableElements(root: HTMLElement | ShadowRoot) {
-  const allElements: HTMLElement[] = [];
-  const tabbableElements: HTMLElement[] = [];
+/**
+ * @param {Element | ShadowRoot} root
+ * @return {Generator<Element | ShadowRoot>}
+ */
+export function* getTabbableElements(root) {
+  /**
+   * We use this Set because we could have potentially duplicated nodes.
+   * @type {Set<Element | ShadowRoot>}
+   */
+  const tabbableElements = new Set()
 
-  function walk(el: HTMLElement | ShadowRoot) {
+  /**
+   * @param {Element | ShadowRoot} el
+   * @return {Generator<Element | ShadowRoot>}
+   */
+  function* walk(el) {
     if (el instanceof Element) {
-      // if the element has "inert" we can just no-op it.
+      // if the element has "inert" we can just no-op it and all its children.
       if (el.hasAttribute('inert')) {
         return;
       }
 
-      if (!allElements.includes(el)) {
-        allElements.push(el);
-      }
-
-      if (!tabbableElements.includes(el) && isTabbable(el)) {
-        tabbableElements.push(el);
+      if (!tabbableElements.has(el) && isTabbable(el)) {
+        tabbableElements.add(el)
+        yield el
       }
 
       /**
        * This looks funky. Basically a slots children will always be picked up *if* they're within the `root` element.
        * However, there is an edge case if the `root` is wrapped by another shadowDOM, it won't grab the children.
        * This fixes that fun edge case.
+       * @param {HTMLSlotElement} slotElement
+       * @param {Node} rootElement
        */
-      const slotChildrenOutsideRootElement = (slotElement: HTMLSlotElement) =>
-        (slotElement.getRootNode({ composed: true }) as ShadowRoot | null)?.host !== root;
-
-      if (el instanceof HTMLSlotElement && slotChildrenOutsideRootElement(el)) {
-        el.assignedElements({ flatten: true }).forEach((assignedEl: HTMLElement) => {
-          walk(assignedEl);
-        });
+      function rootHasSlotChildren (slotElement, rootElement) {
+        return (/** @type {ShadowRoot | null} */ (slotElement.getRootNode({ composed: true })))?.host === rootElement;
       }
 
+      // Walk slots
+      if (el instanceof HTMLSlotElement && !rootHasSlotChildren(el, root)) {
+        for (const assignedEl of el.assignedElements({ flatten: true })) {
+          yield* walk(assignedEl);
+        }
+      }
+
+      // Walk  shadow roots
       if (el.shadowRoot !== null && el.shadowRoot.mode === 'open') {
-        walk(el.shadowRoot);
+        yield* walk(el.shadowRoot);
       }
     }
 
-    [...el.children].forEach((e: HTMLElement) => walk(e));
+    for (const e of Array.from(el.children)) {
+      yield* walk(e)
+    }
   }
 
   // Collect all elements including the root
-  walk(root);
-
-  return tabbableElements;
-
+  yield* walk(root);
   // Is this worth having? Most sorts will always add increased overhead. And positive tabindexes shouldn't really be used.
   // So is it worth being right? Or fast?
   // return allElements.filter(isTabbable).sort((a, b) => {

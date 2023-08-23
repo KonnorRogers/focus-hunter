@@ -7,7 +7,7 @@ import { getTabbableElements } from './tabbable.js';
  * @property {Array<Element>} [activeModals=[]] - A Map of possibly active modals. Pass it in and we'll handle the rest.
  */
 
-export default class Trap {
+export class Trap {
   /**
    * @param {TrapOptions} options
    */
