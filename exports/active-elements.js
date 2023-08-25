@@ -12,8 +12,8 @@
  *       break; // Break the loop, dont need to iterate over the whole array or store an array in memory!
  *     }
  *   }
- * @param {Element | null} [activeElement=document.activeElement] - Make sure to pass in a currently active element.
- * @returns {Generator<Element, undefined, Element>}
+ * @param {Element | ShadowRoot | null} [activeElement=document.activeElement] - Make sure to pass in a currently active element.
+ * @returns {Generator<Element | ShadowRoot, undefined, Element | ShadowRoot>}
  */
 export function* activeElements(activeElement) {
   if (activeElement === null || activeElement === undefined) return;
