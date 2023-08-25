@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title></title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+    </style>
+    <script type="module">
+      import { Trap } from "./exports/focus-hunter.js";
+
+      window.customElements.define("my-trap", class MyTrap extends HTMLElement {
+        constructor () {
+          super()
+          this.attachShadow({ mode: "open" })
+        }
+
+        connectedCallback () {
+          this.shadowRoot.append(document.querySelector("#trap-template").content.cloneNode(true))
+        }
+      })
+
+      const rootElement = document.querySelector("my-trap")
+      new Trap(rootElement)
+    </script>
+  </head>
+  <body>
+    <my-trap id="trap">
+      <button>Focus 1</button>
+      <input value="Focus 2">
+      <button>Focus 3</button>
+    </my-trap>
+
+    <template id="trap-template">
+      <slot></slot>
+    </template>
+  </body>
+</html>

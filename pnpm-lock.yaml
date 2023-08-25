@@ -13,6 +13,9 @@ devDependencies:
   '@open-wc/testing-helpers':
     specifier: ^2.3.0
     version: 2.3.0
+  '@web/dev-server':
+    specifier: ^0.3.0
+    version: 0.3.0
   '@web/test-runner':
     specifier: ^0.17.0
     version: 0.17.0

@@ -42,6 +42,7 @@
   },
   "devDependencies": {
     "@open-wc/testing-helpers": "^2.3.0",
+    "@web/dev-server": "^0.3.0",
     "@web/test-runner": "^0.17.0",
     "@web/test-runner-playwright": "^0.10.1",
     "focus-hunter": "link:."
