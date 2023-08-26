@@ -15,7 +15,7 @@
  * @param {Element | ShadowRoot | null} [activeElement=document.activeElement] - Make sure to pass in a currently active element.
  * @returns {Generator<Element | ShadowRoot, undefined, Element | ShadowRoot>}
  */
-export function* activeElements(activeElement) {
+export function* activeElements(activeElement = document.activeElement) {
   if (activeElement === null || activeElement === undefined) return;
 
   yield activeElement;

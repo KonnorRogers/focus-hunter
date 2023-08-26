@@ -114,17 +114,18 @@ export class Trap {
    * @param {ShadowRoot | Element} startElement
    */
   startElementAlreadyFocused(startElement) {
-    const els = activeElements(startElement)
+    const els = activeElements()
 
     while (true) {
       const next = els.next()
 
       const activeElement = next.value
+
+      if (next.done) return false
+
       if (startElement === activeElement) {
         return true;
       }
-
-      if (next.done) return false
     }
   }
 
@@ -170,8 +171,6 @@ export class Trap {
 
     this.currentFocus = /** @type {HTMLElement} */ (tabbableElements[focusIndex]);
     this.currentFocus?.focus({ preventScroll: true });
-
-    // setTimeout(() => this.checkFocus());
   };
 
 

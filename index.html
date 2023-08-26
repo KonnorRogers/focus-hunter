@@ -5,34 +5,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
+      body {
+        margin: 0;
+      }
     </style>
     <script type="module">
       import { Trap } from "./exports/focus-hunter.js";
+      import "./__tests__/fixtures/components.js"
 
-      window.customElements.define("my-trap", class MyTrap extends HTMLElement {
-        constructor () {
-          super()
-          this.attachShadow({ mode: "open" })
-        }
+      const rootElement = document.querySelector("tab-test-1")
+      const trap = new Trap({ rootElement })
 
-        connectedCallback () {
-          this.shadowRoot.append(document.querySelector("#trap-template").content.cloneNode(true))
-        }
-      })
-
-      const rootElement = document.querySelector("my-trap")
-      new Trap(rootElement)
+      trap.start()
     </script>
   </head>
   <body>
-    <my-trap id="trap">
-      <button>Focus 1</button>
-      <input value="Focus 2">
-      <button>Focus 3</button>
-    </my-trap>
-
-    <template id="trap-template">
-      <slot></slot>
-    </template>
+    <tab-test-1></tab-test-1>
   </body>
 </html>

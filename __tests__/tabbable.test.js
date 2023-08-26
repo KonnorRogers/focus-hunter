@@ -1,8 +1,9 @@
-import { elementUpdated, expect, fixture } from '@open-wc/testing';
+import { html, expect, fixture, aTimeout } from '@open-wc/testing';
 
-import { activeElements } from './active-elements.js';
-import { html } from 'lit';
+import { Trap } from '../exports/focus-hunter.js'
+import { activeElements } from '../exports/active-elements.js';
 import { sendKeys } from '@web/test-runner-commands';
+import "./fixtures/components.js"
 
 /**
  * @param {string[]} keys - Keys to hold down
@@ -30,38 +31,17 @@ function getDeepestActiveElement() {
   return activeElementsArray().pop();
 }
 
-window.customElements.define(
-  'tab-test-1',
-  class extends HTMLElement {
-    constructor() {
-      super();
-      this.attachShadow({ mode: 'open' });
-    }
-    connectedCallback() {
-      this.shadowRoot.innerHTML = `
-      <sl-drawer>
-        <slot name="label" slot="label"></slot>
-
-        <slot></slot>
-
-        <slot name="footer" slot="footer"></slot>
-      </sl-drawer>
-    `;
-    }
-  }
-);
-
-it('Should allow tabbing to slotted elements', async () => {
+test('Should allow tabbing to slotted elements', async () => {
   const el = await fixture(html`
     <tab-test-1>
       <div slot="label">
-        <sl-button id="focus-1">Focus 1</sl-button>
+        <button id="focus-1">Focus 1</button>
       </div>
 
       <div>
-        <!-- Focus 2 lives as the close-button from <sl-drawer> -->
-        <sl-button id="focus-3">Focus 3</sl-button>
-        <button id="focus-4">Focus 4</sl-button>
+        <!-- Focus 2 lives as the close-button from <sl-modal> -->
+        <button id="focus-3">Focus 3</button>
+        <button id="focus-4">Focus 4</button>
         <input id="focus-5" value="Focus 5">
       </div>
 
@@ -72,35 +52,32 @@ it('Should allow tabbing to slotted elements', async () => {
     </tab-test-1>
   `);
 
-  const drawer = el.shadowRoot?.querySelector('sl-drawer');
+  new Trap({ rootElement: el }).start()
 
-  if (drawer === null || drawer === undefined) throw Error('Could not find drawer inside of the test element');
+  const modal = el.shadowRoot?.querySelector('my-modal');
 
-  await drawer.show();
+  const focusZero = modal.shadowRoot?.querySelector("[role='dialog']");
 
-  await elementUpdated(drawer);
-
-  const focusZero = drawer.shadowRoot?.querySelector("[role='dialog']");
-
-  if (focusZero === null || focusZero === undefined) throw Error('Could not find dialog panel inside <sl-drawer>');
+  if (focusZero === null || focusZero === undefined) throw Error('Could not find dialog panel inside <my-modal>');
 
   const focusOne = el.querySelector('#focus-1');
-  const focusTwo = drawer.shadowRoot?.querySelector("[part~='close-button']");
+  const focusTwo = modal.shadowRoot?.querySelector("[part~='close-button']");
 
-  if (focusTwo === null || focusTwo === undefined) throw Error('Could not find close button inside <sl-drawer>');
+  if (focusTwo === null || focusTwo === undefined) throw Error('Could not find close button inside <sl-modal>');
 
   const focusThree = el.querySelector('#focus-3');
   const focusFour = el.querySelector('#focus-4');
   const focusFive = el.querySelector('#focus-5');
   const focusSix = el.querySelector('#focus-6');
 
-  // When we open drawer, we should be focused on the panel to start.
-  expect(getDeepestActiveElement()).to.equal(focusZero);
+  // When we open modal, we should be focused on the panel to start.
+  await sendKeys({ press: tabKey });
+  expect(activeElementsArray()).to.include(focusZero);
 
   await sendKeys({ press: tabKey });
   expect(activeElementsArray()).to.include(focusOne);
 
-  // When we hit the <Tab> key we should go to the "close button" on the drawer
+  // When we hit the <Tab> key we should go to the "close button" on the modal
   await sendKeys({ press: tabKey });
   expect(activeElementsArray()).to.include(focusTwo);
 

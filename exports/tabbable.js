@@ -76,17 +76,18 @@ export function getTabbableBoundary(root) {
   let end = null;
 
   while (true) {
-    const current = tabbableElements.next().value
+    const current = tabbableElements.next()
     if (!start) {
-      start = current
+      start = current.value
     }
 
-    if (tabbableElements.next().done) {
-      end = current
+    if (current.done) {
+      end = current.value
       break
     }
   }
 
+  console.log(start)
   return { start, end };
 }
 
