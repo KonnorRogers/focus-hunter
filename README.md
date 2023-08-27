@@ -1,14 +1,77 @@
-## Initial install
+## Purpose
+
+Focus trapping made easy for things like Dialogs.
+
+## Why?
+
+Because focus trapping sucks. But its a necessary evil.
+
+## Prior Art
+
+- [Focus Trap](https://github.com/focus-trap/focus-trap) was attempted to be used, but was quite big (~5kb) and didn't handle multiple levels of shadow DOM. It is however a big inspiration for this library.
+
+- This solution has been largely extracted from [Shoelace](https://shoelace.style)
+
+## Installation
 
 ```bash
-git clone https://gist.github.com/KonnorRogers/d25bb288be3d90c1bf8208fa339ded3b.git . --depth 1
-mkdir -p {exports,internal,types}
-rm -rf .git
-git init
-mkdir -p .github/workflows
-mv tests.yml ./.github/workflows/tests.yml
-pnpm install -D @web/test-runner @open-wc/testing-helpers @web/test-runner-playwright 
+npm install focus-hunter
 ```
+
+## Adding a trap
+
+
+```js
+// Create a trap
+const trap = new Trap({ rootElement: document.querySelector("my-trap")})
+
+// Start the trap
+trap.start()
+
+// Stop the trap
+trap.stop()
+```
+
+## Multiple Traps
+
+Focus Trap is allowed to have multiple traps. It keeps track of the stacks using `window.focusHunter.trapStack` which
+is implemented via a `Set`.
+
+## A note on iframes
+
+While the focus trap can get to an `<iframe>` it cannot find elements within a cross origin iframe
+so they are excluding from the focus trap.
+
+## Differences from Shoelace
+
+This library is largely me experimenting with generators. To note here are some differences so
+far beyond internals:
+
+```diff
+- // Elements with aria-disabled are not tabbable
+- if (el.hasAttribute('aria-disabled') && el.getAttribute('aria-disabled') !== 'false') {
+-   return false;
+- }
+```
+
+The above was removed from `exports/tabbable.js` because `aria-disabled` elements are tabbable.
+
+
+```diff
++  // Anchor tags with no hrefs arent focusable.
++  // This is focusable: <a href="">Stuff</a>
++  // This is not: <a>Stuff</a>
++  if (["a", "area"].includes(tag) && el.getAttribute("href") == null) return false
+```
+
+While not a big deal, anchor elements without an `href` attribute were getting tripped up.
+So we added a check to make sure it has an `href`.
+
+```diff
++ area[href], iframe, object, embed
+```
+
+The additional elements were found here: <https://github.com/gdkraus/accessible-modal-dialog/blob/d2a9c13de65028cda917279246346a277509fda0/modal-window.js#L38>
 
 ## Structure
 

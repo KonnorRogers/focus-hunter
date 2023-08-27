@@ -10,17 +10,12 @@ export function isTabbable(el) {
   const tag = el.tagName.toLowerCase();
 
   // Elements with a -1 tab index are not tabbable
-  if (el.getAttribute('tabindex') === '-1') {
+  if (Number(el.getAttribute('tabindex')) <= -1) {
     return false;
   }
 
   // Elements with a disabled attribute are not tabbable
   if (el.hasAttribute('disabled')) {
-    return false;
-  }
-
-  // Elements with aria-disabled are not tabbable
-  if (el.hasAttribute('aria-disabled') && el.getAttribute('aria-disabled') !== 'false') {
     return false;
   }
 
@@ -39,8 +34,15 @@ export function isTabbable(el) {
     return false;
   }
 
+  // Anchor tags with no hrefs arent focusable.
+  // This is focusable: <a href="">Stuff</a>
+  // This is not: <a>Stuff</a>
+  if (["area", "a"].includes(tag) && !el.hasAttribute("href")) return false
+
+  const computedStyle = window.getComputedStyle(el)
+
   // Elements without visibility are not tabbable
-  if (window.getComputedStyle(el).visibility === 'hidden') {
+  if (computedStyle.visibility === 'hidden') {
     return false;
   }
 
@@ -60,7 +62,7 @@ export function isTabbable(el) {
   }
 
   // At this point, the following elements are considered tabbable
-  return ['button', 'input', 'select', 'textarea', 'a', 'audio', 'video', 'summary'].includes(tag);
+  return ['button', 'input', 'select', 'textarea', 'a', 'audio', 'video', 'summary', 'iframe', 'object', 'embed'].includes(tag);
 }
 
 /**
@@ -87,74 +89,86 @@ export function getTabbableBoundary(root) {
     }
   }
 
-  console.log(start)
   return { start, end };
 }
 
 /**
  * @param {Element | ShadowRoot} root
- * @return {Generator<Element | ShadowRoot>}
+ * @return {Generator<Element>}
  */
 export function* getTabbableElements(root) {
   /**
    * We use this Set because we could have potentially duplicated nodes.
-   * @type {Set<Element | ShadowRoot>}
+   * @type {Set<Element>}
    */
   const tabbableElements = new Set()
 
-  /**
-   * @param {Element | ShadowRoot} el
-   * @return {Generator<Element | ShadowRoot>}
-   */
-  function* walk(el) {
-    if (el instanceof Element) {
-      // if the element has "inert" we can just no-op it and all its children.
-      if (el.hasAttribute('inert')) {
-        return;
-      }
+  // Collect all elements including the root
+  for (const el of [...walk(root, root, tabbableElements)].sort(sortByTabIndex)) {
+    yield el
+  }
+}
 
-      if (!tabbableElements.has(el) && isTabbable(el)) {
-        tabbableElements.add(el)
-        yield el
-      }
 
-      /**
-       * This looks funky. Basically a slots children will always be picked up *if* they're within the `root` element.
-       * However, there is an edge case if the `root` is wrapped by another shadowDOM, it won't grab the children.
-       * This fixes that fun edge case.
-       * @param {HTMLSlotElement} slotElement
-       * @param {Node} rootElement
-       */
-      function rootHasSlotChildren (slotElement, rootElement) {
-        return (/** @type {ShadowRoot | null} */ (slotElement.getRootNode({ composed: true })))?.host === rootElement;
-      }
 
-      // Walk slots
-      if (el instanceof HTMLSlotElement && !rootHasSlotChildren(el, root)) {
-        for (const assignedEl of el.assignedElements({ flatten: true })) {
-          yield* walk(assignedEl);
-        }
-      }
+// Is this worth having? Most sorts will always add increased overhead. And positive tabindexes shouldn't really be used.
+// So is it worth being right? Or fast?
+/**
+ * @param {Element} a
+ * @param {Element} b
+ */
+function sortByTabIndex(a, b) {
+  // Make sure we sort by tabindex.
+  const aTabindex = Number(a.getAttribute('tabindex')) || 0;
+  const bTabindex = Number(b.getAttribute('tabindex')) || 0;
+  return bTabindex - aTabindex;
+};
 
-      // Walk  shadow roots
-      if (el.shadowRoot !== null && el.shadowRoot.mode === 'open') {
-        yield* walk(el.shadowRoot);
+/**
+  * @param {Element | ShadowRoot} el
+  * @param {Element | ShadowRoot} rootElement
+  * @param {Set<Element>} tabbableElements
+  * @return {Generator<Element>}
+  */
+function* walk(el, rootElement, tabbableElements) {
+  if (el instanceof Element) {
+    // if the element has "inert" we can just no-op it and all its children.
+    if (el.hasAttribute('inert')) {
+      return;
+    }
+
+    if (!tabbableElements.has(el) && isTabbable(el)) {
+      tabbableElements.add(el)
+      yield el
+    }
+
+
+    // Walk slots
+    if (el instanceof HTMLSlotElement && !rootHasSlotChildren(el, rootElement)) {
+      for (const assignedEl of el.assignedElements({ flatten: true })) {
+        yield* walk(assignedEl, rootElement, tabbableElements);
       }
     }
 
-    for (const e of Array.from(el.children)) {
-      yield* walk(e)
+    // Walk  shadow roots
+    if (el.shadowRoot !== null && el.shadowRoot.mode === 'open') {
+      yield* walk(el.shadowRoot, rootElement, tabbableElements);
     }
   }
 
-  // Collect all elements including the root
-  yield* walk(root);
-  // Is this worth having? Most sorts will always add increased overhead. And positive tabindexes shouldn't really be used.
-  // So is it worth being right? Or fast?
-  // return allElements.filter(isTabbable).sort((a, b) => {
-  //   // Make sure we sort by tabindex.
-  //   const aTabindex = Number(a.getAttribute('tabindex')) || 0;
-  //   const bTabindex = Number(b.getAttribute('tabindex')) || 0;
-  //   return bTabindex - aTabindex;
-  // });
+  for (const e of Array.from(el.children)) {
+    yield* walk(e, rootElement, tabbableElements)
+  }
+}
+
+
+/**
+  * This looks funky. Basically a slots children will always be picked up *if* they're within the `root` element.
+  * However, there is an edge case if the `root` is wrapped by another shadowDOM, it won't grab the children.
+  * This fixes that fun edge case.
+  * @param {HTMLSlotElement} slotElement
+  * @param {Node} rootElement
+  */
+function rootHasSlotChildren (slotElement, rootElement) {
+  return (/** @type {ShadowRoot | null} */ (slotElement.getRootNode({ composed: true })))?.host === rootElement;
 }

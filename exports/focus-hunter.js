@@ -3,9 +3,13 @@ import { activeElements } from './active-elements.js';
 import { getTabbableElements, getTabbableBoundary } from './tabbable.js';
 
 /**
+ * {import("../types/focus-hunter.d.ts")}
+ */
+
+/**
  * @typedef {object} TrapOptions
  * @property {Element} rootElement - The element to implement focus trapping on.
- * @property {Array<Element>} [trapStack=[]] - A Map of possibly active modals. Pass it in and we'll handle the rest.
+ * @property {Set<Trap>} [trapStack=[]] - A Map of possibly active modals. Pass it in and we'll handle the rest.
  */
 
 export class Trap {
@@ -23,11 +27,15 @@ export class Trap {
      */
     this.rootElement = options.rootElement;
 
+    if (!window.focusHunter) {
+      window.focusHunter = {trapStack: new Set()}
+    }
+
     /**
      * An array of possibly focus trapped elements. This helps protects against multiple traps being active at once.
-     * @type {Element[]}
+     * @type {Set<Trap>}
      */
-    this.trapStack = options.trapStack || [];
+    this.trapStack = window.focusHunter.trapStack;
 
     /**
      * Which way to go in the array of tabbable elements
@@ -47,7 +55,9 @@ export class Trap {
    * Start the trap
    */
   start() {
-    this.trapStack.push(this.rootElement);
+    if (this.trapStack.has(this)) return
+
+    this.trapStack.add(this);
     this.rootElement.dispatchEvent(new Event("focus-trap-start"))
     document.addEventListener('focusin', this.handleFocusIn);
     document.addEventListener('keydown', this.handleKeyDown);
@@ -57,8 +67,8 @@ export class Trap {
   /**
    * End the trap
    */
-  end() {
-    this.trapStack = this.trapStack.filter(modal => modal !== this.rootElement);
+  stop() {
+    this.trapStack.delete(this);
     this.currentFocus = undefined;
     this.rootElement.dispatchEvent(new Event("focus-trap-end"))
     document.removeEventListener('focusin', this.handleFocusIn);
@@ -68,34 +78,55 @@ export class Trap {
 
   /**
    * Check the trapStack and make sure this is the current trap.
+   * @returns {Boolean}
    */
   isActive() {
     // The "active" modal is always the most recent one shown
-    return this.trapStack[this.trapStack.length - 1] === this.rootElement;
+    let end = null
+
+    const values = this.trapStack.values()
+
+    while (true) {
+      const next = values.next()
+
+      if (next.done) {
+        break
+      }
+
+      end = next.value
+    }
+
+    return end === this
   }
 
   /**
-   * If we're the active trap, call .focus() at what we expect to be the proper focus.
+   * If we're the active trap, call .focus() at what we expect to be the proper focus to be.
+   * this is for the off chance someone has managed to escape the focus.
    */
-  checkFocus() {
+  resetFocus() {
     if (this.isActive()) {
       if (!this.rootElement.matches(':focus-within')) {
-        const {start,end} = getTabbableBoundary(/** @type {ShadowRoot | HTMLElement} */ (this.rootElement))
-        const target = this.tabDirection === 'forward' ? start : end;
+        let target = null
 
-        if (typeof target?.focus === 'function') {
+        const tabbableElements = getTabbableElements(/** @type {ShadowRoot | HTMLElement} */ (this.rootElement))
+
+        if (this.tabDirection === "forward") {
+          target = tabbableElements.next().value
+        } else if (this.tabDirection === "backward") {
+          while (true) {
+            const next = tabbableElements.next()
+
+            if (next.done) {
+              break
+            }
+
+            target = next.value
+          }
+        }
+
+        if (target && typeof target?.focus === 'function') {
           this.currentFocus = target;
-          target.focus({ preventScroll: true });
-          // https://developer.mozilla.org/en-US/docs/Web/API/FocusEvent#order_of_events
-          // focusout: sent before element A loses focus.
-          // focusin: sent before element B receives focus.
-          // blur: sent after element A loses focus.
-          // focus: sent after element B receives focus.
-          //
-          // previouslyFocusedElement.dispatchEvent(new FocusEvent("focusout", { bubbles: true }))
-          // currentlyFocusedElement.dispatchEvent(new FocusEvent("focusin", { bubbles: true }))
-          // previouslyFocusedElement.dispatchEvent(new FocusEvent("blur", { bubbles: false }))
-          // currentlyFocusedElement.dispatchEvent(new FocusEvent("focus", { bubbles: false }))
+          target.focus({ preventScroll: false });
         }
       }
     }
@@ -105,7 +136,7 @@ export class Trap {
    * @param {FocusEvent} _event
    */
   handleFocusIn = (_event) => {
-    this.checkFocus();
+    this.resetFocus();
   };
 
   /**

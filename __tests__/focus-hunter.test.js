@@ -1,7 +1,7 @@
 import { html, expect, fixture, aTimeout } from '@open-wc/testing';
 
 import { Trap } from '../exports/focus-hunter.js'
-import { activeElements } from '../exports/active-elements.js';
+import { activeElements, deepestActiveElement } from '../exports/active-elements.js';
 import { sendKeys } from '@web/test-runner-commands';
 import "./fixtures/components.js"
 
@@ -27,11 +27,29 @@ function activeElementsArray() {
   return [...activeElements()];
 }
 
-function getDeepestActiveElement() {
-  return activeElementsArray().pop();
-}
+test("Should not attempt to tab non-visible / non-focusable elements", async () => {
+  const el = await fixture(html`
+    <button tabindex="-1">Button</button>
+    <a></a>
+    <button style="display: none;">Button</button>
+    <button style="visibility: hidden;">Button</button>
+    <button style="opacity: 0;">Button</button>
+  `)
 
-test('Should allow tabbing to slotted elements', async () => {
+  new Trap({ rootElement: el }).start()
+
+  // Tabs should just go to the body.
+  await sendKeys({ press: tabKey });
+  expect(deepestActiveElement()).to.equal(document.body)
+
+  await sendKeys({ press: tabKey });
+  expect(deepestActiveElement()).to.equal(document.body)
+
+  await holdShiftKey(async () => await sendKeys({ press: tabKey }))
+  expect(deepestActiveElement()).to.equal(document.body)
+})
+
+test('Should allow tabbing to slotted elements via composed shadow doms', async () => {
   const el = await fixture(html`
     <tab-test-1>
       <div slot="label">
@@ -52,8 +70,6 @@ test('Should allow tabbing to slotted elements', async () => {
     </tab-test-1>
   `);
 
-  new Trap({ rootElement: el }).start()
-
   const modal = el.shadowRoot?.querySelector('my-modal');
 
   const focusZero = modal.shadowRoot?.querySelector("[role='dialog']");
@@ -70,9 +86,14 @@ test('Should allow tabbing to slotted elements', async () => {
   const focusFive = el.querySelector('#focus-5');
   const focusSix = el.querySelector('#focus-6');
 
+  // Open the modal, which will activate the trap, then test.
+  modal.show()
+  await aTimeout(1)
+
   // When we open modal, we should be focused on the panel to start.
   await sendKeys({ press: tabKey });
   expect(activeElementsArray()).to.include(focusZero);
+  expect(deepestActiveElement()).to.equal(focusZero)
 
   await sendKeys({ press: tabKey });
   expect(activeElementsArray()).to.include(focusOne);
