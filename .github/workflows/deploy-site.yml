@@ -23,5 +23,5 @@ jobs:
       - name: PNPM run build
         run: pnpm run build
       - name: Publish
-        run: pnpm exec
+        run: pnpm exec gh-pages -d . -b gh-pages
 
