@@ -178,6 +178,10 @@ if (!window.customElements.get("my-modal")) {
             grid-template-columns: minmax(0, 1fr);
             padding: 8px;
           }
+
+          button:focus {
+            outline: 3px solid blue;
+          }
         </style>
 
         <div class="base">

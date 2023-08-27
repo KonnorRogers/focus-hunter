@@ -36,7 +36,7 @@
   "bugs": {
     "url": "https://github.com/KonnorRogers/focus-hunter/issues"
   },
-  "homepage": "https://github.com/KonnorRogers/focus-hunter",
+  "homepage": "https://konnorrogers.github.io/focus-hunter",
   "author": "KonnorRogers <konnor5456@gmail.com>",
   "publishConfig": {
     "access": "public"
@@ -52,6 +52,7 @@
     "typescript": "^5.2.2"
   },
   "dependencies": {
-    "composed-offset-position": "^0.0.4"
+    "composed-offset-position": "^0.0.4",
+    "gh-pages": "^6.0.0"
   }
 }
