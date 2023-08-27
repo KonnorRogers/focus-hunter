@@ -4,6 +4,20 @@
     <title></title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="apple-touch-icon" sizes="180x180" href="/site/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/site/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/site/favicon-16x16.png">
+    <link rel="manifest" href="/site/site.webmanifest">
+
+    <script async src="https://ga.jspm.io/npm:es-module-shims@1.8.0/dist/es-module-shims.js"></script>
+    <!-- https://generator.jspm.io/#U2NhYGBkDM0rySzJSU1hKEpNTC5xMLTQM9Az0C1K1jMAAKFS5w0gAA -->
+    <script type="importmap">
+      {
+        "imports": {
+          "composed-offset-position": "./node_modules/composed-offset-position/dist/composed-offset-position.esm.js"
+        }
+      }
+    </script>
     <style>
       *, *::after, *::before {
         box-sizing: border-box;
@@ -86,28 +100,6 @@
       }
 
     </style>
-    <script type="module">
-      import "./__tests__/fixtures/components.js"
-      import { Trap } from "./exports/focus-hunter.js"
-
-      document.querySelector("#modal-toggle").addEventListener("click", () => document.querySelector("tab-test-1").shadowRoot.querySelector("my-modal").show())
-
-      document.querySelectorAll(".js-activate-trap").forEach((el) => el.addEventListener("click", (evt) => {
-        const rootElement = evt.currentTarget.nextElementSibling
-        if (!rootElement.trap) {
-          rootElement.trap = new Trap({ rootElement })
-        }
-        rootElement.trap.start()
-        rootElement.classList.add("trap--active")
-        console.log(rootElement)
-      }))
-
-      document.querySelectorAll(".js-deactivate-trap").forEach((el) => el.addEventListener("click", (evt) => {
-        const rootElement = evt.target.closest(".trap")
-        rootElement.trap?.stop()
-        rootElement.classList.remove("trap--active")
-      }))
-    </script>
   </head>
   <body>
     <main>
@@ -165,13 +157,19 @@
       <div class="trap">
         I'm a focus trap with <button>many</button> <a>Link without an href</a> <a href="#">Link with an href</a> <input value="elements">
 
+        There's some hidden buttons here!
+        <br>
         <button style="display: none;">Display none button</button>
+        <br>
         <button class="opacity-0">Opacity 0 button</button>
+        <br>
         <button class="visually-hidden">Visually Hidden button</button>
+        <br>
         <button inert>Inert Button</button>
-
+        <br>
         <button style="visibility: hidden;">Hidden button</button>
         <br>
+        <div contenteditable="true">Contenteditable div</div>
         <button class="js-deactivate-trap">Deactivate Trap</button>
       </div>
 
@@ -195,5 +193,27 @@
       </div>
     </main>
 
+    <script type="module">
+      import "./__tests__/fixtures/components.js"
+      import { Trap } from "../exports/focus-hunter.js"
+
+      document.querySelector("#modal-toggle").addEventListener("click", () => document.querySelector("tab-test-1").shadowRoot.querySelector("my-modal").show())
+
+      document.querySelectorAll(".js-activate-trap").forEach((el) => el.addEventListener("click", (evt) => {
+        const rootElement = evt.currentTarget.nextElementSibling
+        if (!rootElement.trap) {
+          rootElement.trap = new Trap({ rootElement })
+        }
+        rootElement.trap.start()
+        rootElement.classList.add("trap--active")
+        console.log(rootElement)
+      }))
+
+      document.querySelectorAll(".js-deactivate-trap").forEach((el) => el.addEventListener("click", (evt) => {
+        const rootElement = evt.target.closest(".trap")
+        rootElement.trap?.stop()
+        rootElement.classList.remove("trap--active")
+      }))
+    </script>
   </body>
 </html>

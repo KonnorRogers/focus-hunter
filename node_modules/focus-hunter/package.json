@@ -36,7 +36,7 @@
   "bugs": {
     "url": "https://github.com/KonnorRogers/focus-hunter/issues"
   },
-  "homepage": "https://github.com/KonnorRogers/focus-hunter",
+  "homepage": "https://konnorrogers.github.io/focus-hunter",
   "author": "KonnorRogers <konnor5456@gmail.com>",
   "publishConfig": {
     "access": "public"
