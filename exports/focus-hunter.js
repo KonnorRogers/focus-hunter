@@ -1,6 +1,6 @@
 // @ts-check
 import { activeElements } from './active-elements.js';
-import { getTabbableElements, getTabbableBoundary } from './tabbable.js';
+import { getTabbableElements } from './tabbable.js';
 
 /**
  * {import("../types/focus-hunter.d.ts")}
@@ -9,6 +9,7 @@ import { getTabbableElements, getTabbableBoundary } from './tabbable.js';
 /**
  * @typedef {object} TrapOptions
  * @property {Element} rootElement - The element to implement focus trapping on.
+ * @property {boolean} preventScroll -
  * @property {Set<Trap>} [trapStack=[]] - A Map of possibly active modals. Pass it in and we'll handle the rest.
  */
 
@@ -36,6 +37,12 @@ export class Trap {
      * @type {Set<Trap>}
      */
     this.trapStack = window.focusHunter.trapStack;
+
+    /**
+     * If `true` will do: `focus({ preventScroll: true })` to prevent scrolling when focusing.
+     * @type {boolean}
+     */
+    this.preventScroll = Boolean(options.preventScroll === true)
 
     /**
      * Which way to go in the array of tabbable elements
@@ -186,7 +193,8 @@ export class Trap {
 
     if (focusIndex === -1) {
       this.currentFocus = (/** @type {HTMLElement} */ (start));
-      this.currentFocus?.focus?.({ preventScroll: true });
+      // @TODO: this does `preventScroll` in Shoelace, and honestly, I'm not sure if that's right.
+      this.currentFocus?.focus?.({ preventScroll: this.preventScroll });
       return;
     }
 

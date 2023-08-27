@@ -66,33 +66,6 @@ export function isTabbable(el) {
 }
 
 /**
- * Returns the first and last bounding elements that are tabbable. This is more performant than checking every single
- * element because it short-circuits after finding the first and last ones.
- * @param {HTMLElement | ShadowRoot} root
- */
-export function getTabbableBoundary(root) {
-  const tabbableElements = getTabbableElements(root);
-
-  // Find the first and last tabbable elements
-  let start = null;
-  let end = null;
-
-  while (true) {
-    const current = tabbableElements.next()
-    if (!start) {
-      start = current.value
-    }
-
-    if (current.done) {
-      end = current.value
-      break
-    }
-  }
-
-  return { start, end };
-}
-
-/**
  * @param {Element | ShadowRoot} root
  * @return {Generator<Element>}
  */

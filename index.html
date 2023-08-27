@@ -11,8 +11,13 @@
       html, body {
         height: 100%;
         min-height: 100%;
+        line-height: 1.6;
         margin: 0;
         padding: 0;
+      }
+
+      :focus {
+        outline: 3px solid blue;
       }
 
       main > * + * {
@@ -64,8 +69,6 @@
         background-color: var(--trap-color);
       }
 
-      pre > code {
-      }
     </style>
     <script type="module">
       import "./__tests__/fixtures/components.js"
@@ -117,6 +120,15 @@
       </h1>
 
 
+      <p>
+      <code>focus-hunter</code> traps support multiple levels of focus trapping.
+      It does so by maintaining a <code>Set</code> on <code>window.focusHunter.trapStack</code>
+
+      <br>
+
+      Try having multiple trap stacks enabled at once.
+      </p>
+
       <h2>
         Focus Trapping in a dialog
       </h2>
@@ -124,7 +136,7 @@
       <div class="trap">
         Click the button to toggle a dialog / modal which has a focus trap built-in.
 
-        <br><br>
+        <br>
         <button id="modal-toggle">Show Modal</button>
         <tab-test-1></tab-test-1>
       </div>
@@ -144,7 +156,7 @@
         <button style="opacity: 0;">Opacity 0 button</button>
 
         <button style="visibility: hidden;">Hidden button</button>
-        <br><br>
+        <br>
         <button class="js-deactivate-trap">Deactivate Trap</button>
       </div>
 
