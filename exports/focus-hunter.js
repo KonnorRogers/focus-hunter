@@ -210,6 +210,8 @@ export class Trap {
   };
 
   adjustFocus () {
+    if (!this.isActive()) return
+
     const tabbableElements = [...getTabbableElements(this.rootElement)];
 
     const start = tabbableElements[0]

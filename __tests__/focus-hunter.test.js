@@ -89,6 +89,62 @@ test("Should account for the initially focused element", async () => {
   expect(deepestActiveElement()).to.equal(el.querySelectorAll("button")[1])
 })
 
+test("Activating multiple traps", async () => {
+  const el1 = await fixture(html`
+    <div>
+      <button>Button</button>
+      <a href="">Link</a>
+      <area href="">Area</area>
+      <button>Button 2</button>
+    </div>
+  `)
+
+  const el2 = await fixture(html`
+    <div>
+      <button>Button</button>
+      <a href="">Link</a>
+      <area href="">Area</area>
+      <button>Button 2</button>
+    </div>
+  `)
+
+  const trap1 = new Trap({ rootElement: el1 })
+  const trap2 = new Trap({ rootElement: el2 })
+
+  // Get focus ball rolling
+  el1.querySelector("button").focus()
+
+  trap1.start()
+  trap2.start()
+
+  await sendKeys({ press: tabKey })
+  expect(deepestActiveElement()).to.equal(el2.querySelector("button"))
+
+  await sendKeys({ press: tabKey })
+  expect(deepestActiveElement()).to.equal(el2.querySelector("a"))
+
+  await sendKeys({ press: tabKey });
+  expect(deepestActiveElement()).to.equal(el2.querySelectorAll("button")[1])
+
+  await sendKeys({ press: tabKey });
+  expect(deepestActiveElement()).to.equal(el2.querySelector("button"))
+
+  trap2.stop()
+
+  trap1.initialFocus.focus()
+  expect(deepestActiveElement()).to.equal(el1.querySelector("button"))
+
+  await sendKeys({ press: tabKey })
+  expect(deepestActiveElement()).to.equal(el1.querySelector("a"))
+
+  await sendKeys({ press: tabKey });
+  expect(deepestActiveElement()).to.equal(el1.querySelectorAll("button")[1])
+
+  await sendKeys({ press: tabKey });
+  expect(deepestActiveElement()).to.equal(el1.querySelector("button"))
+
+})
+
 test('Should allow tabbing to slotted elements via composed shadow doms', async () => {
   const el = await fixture(html`
     <tab-test-1>
