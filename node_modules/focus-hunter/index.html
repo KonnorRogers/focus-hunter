@@ -14,7 +14,8 @@
     <script type="importmap">
       {
         "imports": {
-          "composed-offset-position": "./node_modules/composed-offset-position/dist/composed-offset-position.esm.js"
+          "composed-offset-position": "./node_modules/composed-offset-position/dist/composed-offset-position.esm.js",
+          "focus-hunter": "./exports/focus-hunter.js"
         }
       }
     </script>
@@ -193,9 +194,9 @@
       </div>
     </main>
 
+    <script type="module" src="/__tests__/fixtures/components.js"></script>
     <script type="module">
-      import "./__tests__/fixtures/components.js"
-      import { Trap } from "../exports/focus-hunter.js"
+      import { Trap } from "focus-hunter"
 
       document.querySelector("#modal-toggle").addEventListener("click", () => document.querySelector("tab-test-1").shadowRoot.querySelector("my-modal").show())
 
