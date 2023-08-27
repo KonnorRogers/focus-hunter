@@ -4,6 +4,7 @@ import { Trap } from '../exports/focus-hunter.js'
 import { activeElements, deepestActiveElement } from '../exports/active-elements.js';
 import { sendKeys } from '@web/test-runner-commands';
 import "./fixtures/components.js"
+import { getTabbableElements } from '../exports/tabbable.js';
 
 /**
  * @param {string[]} keys - Keys to hold down
@@ -27,6 +28,14 @@ function activeElementsArray() {
   return [...activeElements()];
 }
 
+setup(() => {
+  if (!window.focusHunter) return
+
+  for (const trap of window.focusHunter.trapStack.values()) {
+    trap.stop()
+  }
+})
+
 test("Should not attempt to tab non-visible / non-focusable elements", async () => {
   const el = await fixture(html`
     <button tabindex="-1">Button</button>
@@ -47,6 +56,37 @@ test("Should not attempt to tab non-visible / non-focusable elements", async () 
 
   await holdShiftKey(async () => await sendKeys({ press: tabKey }))
   expect(deepestActiveElement()).to.equal(document.body)
+})
+
+test("Should account for the initially focused element", async () => {
+  const el = await fixture(html`
+    <div>
+      <button>Button</button>
+      <a href="">Link</a>
+      <area href="">Area</area>
+      <button>Button 2</button>
+    </div>
+  `)
+
+  const trap = new Trap({ rootElement: el })
+
+  el.querySelector("button").focus()
+
+  expect(deepestActiveElement()).to.equal(el.querySelector("button"))
+
+  // Delay the start so we can test initial focus
+  trap.start()
+  await sendKeys({ press: tabKey })
+  expect(deepestActiveElement()).to.equal(el.querySelector("a"))
+
+  await sendKeys({ press: tabKey });
+  expect(deepestActiveElement()).to.equal(el.querySelectorAll("button")[1])
+
+  await sendKeys({ press: tabKey });
+  expect(deepestActiveElement()).to.equal(el.querySelector("button"))
+
+  await holdShiftKey(async () => await sendKeys({ press: tabKey }))
+  expect(deepestActiveElement()).to.equal(el.querySelectorAll("button")[1])
 })
 
 test('Should allow tabbing to slotted elements via composed shadow doms', async () => {

@@ -1,5 +1,5 @@
 // @ts-check
-import { activeElements } from './active-elements.js';
+import { activeElements, deepestActiveElement } from './active-elements.js';
 import { getTabbableElements } from './tabbable.js';
 
 /**
@@ -9,8 +9,7 @@ import { getTabbableElements } from './tabbable.js';
 /**
  * @typedef {object} TrapOptions
  * @property {Element} rootElement - The element to implement focus trapping on.
- * @property {boolean} preventScroll -
- * @property {Set<Trap>} [trapStack=[]] - A Map of possibly active modals. Pass it in and we'll handle the rest.
+ * @property {boolean} preventScroll - Whether or not to prevent scrolling when focusing elements in the trap.
  */
 
 export class Trap {
@@ -29,14 +28,29 @@ export class Trap {
     this.rootElement = options.rootElement;
 
     if (!window.focusHunter) {
-      window.focusHunter = {trapStack: new Set()}
+      window.focusHunter = {
+        trapStack: new Set(),
+        rootElementStack: new Set()
+      }
     }
 
     /**
-     * An array of possibly focus trapped elements. This helps protects against multiple traps being active at once.
+     * The currently focused element when the focus trap is started.
+     * @type {undefined | null | HTMLElement}
+     */
+    this.initialFocus = undefined
+
+    /**
+     * An array of possible focus traps. This helps protects against multiple traps being active at once.
      * @type {Set<Trap>}
      */
     this.trapStack = window.focusHunter.trapStack;
+
+    /**
+     * An array of possibly focus trapped elements. This helps protects against multiple traps being active at once.
+     * @type {Set<Element>}
+     */
+    this.rootElementStack = window.focusHunter.rootElementStack;
 
     /**
      * If `true` will do: `focus({ preventScroll: true })` to prevent scrolling when focusing.
@@ -62,13 +76,18 @@ export class Trap {
    * Start the trap
    */
   start() {
-    if (this.trapStack.has(this)) return
+    if (this.trapStack.has(this) || this.rootElementStack.has(this.rootElement)) return
 
     this.trapStack.add(this);
+    this.rootElementStack.add(this.rootElement)
     this.rootElement.dispatchEvent(new Event("focus-trap-start"))
     document.addEventListener('focusin', this.handleFocusIn);
     document.addEventListener('keydown', this.handleKeyDown);
     document.addEventListener('keyup', this.handleKeyUp);
+
+    const currentlyFocusedEl = deepestActiveElement()
+    this.initialFocus = /** @type {HTMLElement | null} */ (currentlyFocusedEl)
+    this.currentFocus = /** @type {HTMLElement | null} */ (currentlyFocusedEl)
   }
 
   /**
@@ -76,11 +95,17 @@ export class Trap {
    */
   stop() {
     this.trapStack.delete(this);
+    this.rootElementStack.delete(this.rootElement)
     this.currentFocus = undefined;
+
     this.rootElement.dispatchEvent(new Event("focus-trap-end"))
     document.removeEventListener('focusin', this.handleFocusIn);
     document.removeEventListener('keydown', this.handleKeyDown);
     document.removeEventListener('keyup', this.handleKeyUp);
+
+    // Perhaps we want to return to initial focus?
+    // this.initialFocus?.focus({ preventScroll: this.preventScroll })
+    this.initialFocus = undefined
   }
 
   /**
@@ -181,36 +206,35 @@ export class Trap {
 
     event.preventDefault();
 
+    this.adjustFocus()
+  };
+
+  adjustFocus () {
     const tabbableElements = [...getTabbableElements(this.rootElement)];
 
     const start = tabbableElements[0]
 
-    const currentFocusIndex = tabbableElements.findIndex((el) => el === this.currentFocus)
+    let currentFocusIndex = tabbableElements.findIndex((el) => el === this.currentFocus)
 
-    // Sometimes we programmatically focus the first element in a modal.
-    // Lets make sure the start element isn't already focused.
-    let focusIndex = this.startElementAlreadyFocused(start) ? 0 : currentFocusIndex;
-
-    if (focusIndex === -1) {
+    if (currentFocusIndex === -1) {
       this.currentFocus = (/** @type {HTMLElement} */ (start));
-      // @TODO: this does `preventScroll` in Shoelace, and honestly, I'm not sure if that's right.
       this.currentFocus?.focus?.({ preventScroll: this.preventScroll });
       return;
     }
 
     const addition = this.tabDirection === 'forward' ? 1 : -1;
 
-    if (focusIndex + addition >= tabbableElements.length) {
-      focusIndex = 0;
+    if (currentFocusIndex + addition >= tabbableElements.length) {
+      currentFocusIndex = 0;
     } else if (currentFocusIndex + addition < 0) {
-      focusIndex = tabbableElements.length - 1;
+      currentFocusIndex = tabbableElements.length - 1;
     } else {
-      focusIndex += addition;
+      currentFocusIndex += addition;
     }
 
-    this.currentFocus = /** @type {HTMLElement} */ (tabbableElements[focusIndex]);
+    this.currentFocus = /** @type {HTMLElement} */ (tabbableElements[currentFocusIndex]);
     this.currentFocus?.focus({ preventScroll: true });
-  };
+  }
 
 
   /**

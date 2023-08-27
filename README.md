@@ -23,13 +23,22 @@ npm install focus-hunter
 
 ```js
 // Create a trap
-const trap = new Trap({ rootElement: document.querySelector("my-trap")})
+const trap = new Trap({ rootElement: document.querySelector("my-trap") })
 
 // Start the trap
 trap.start()
 
 // Stop the trap
 trap.stop()
+```
+
+## All Options
+
+```js
+const trap = new Trap({
+  rootElement,
+  preventScroll, // Passed to `element.focus({ preventScroll })` for programmatically focused elements
+})
 ```
 
 ## Multiple Traps
@@ -40,12 +49,11 @@ is implemented via a `Set`.
 ## A note on iframes
 
 While the focus trap can get to an `<iframe>` it cannot find elements within a cross origin iframe
-so they are excluding from the focus trap.
+so they are excluded from the focus trap.
 
 ## Differences from Shoelace
 
-This library is largely me experimenting with generators. To note here are some differences so
-far beyond internals:
+This library is largely me experimenting with generators. Beyond internal implementation details, here are some differences:
 
 ```diff
 - // Elements with aria-disabled are not tabbable
@@ -68,7 +76,7 @@ While not a big deal, anchor elements without an `href` attribute were getting t
 So we added a check to make sure it has an `href`.
 
 ```diff
-+ area[href], iframe, object, embed
++iframe, object, embed
 ```
 
 The additional elements were found here: <https://github.com/gdkraus/accessible-modal-dialog/blob/d2a9c13de65028cda917279246346a277509fda0/modal-window.js#L38>

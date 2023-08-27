@@ -59,8 +59,10 @@ if (!window.customElements.get("my-modal")) {
       this.open = false
       this.trap = new Trap({ rootElement: this })
       this.setEvent(this.handleBackdropClick)
+      this.setEvent(this.handleCloseButtonClick)
 
       this.addEventListener("click", this.events.get(this.handleBackdropClick))
+      this.addEventListener("click", this.events.get(this.handleCloseButtonClick))
     }
 
     attributeChangedCallback (attrName, oldVal, newVal) {
@@ -95,6 +97,13 @@ if (!window.customElements.get("my-modal")) {
       this.open = false
     }
 
+    handleCloseButtonClick (event) {
+      const closeButton = this.shadowRoot.querySelector("[part~='close-button']")
+      if (event.composedPath().includes(closeButton)) {
+        this.hide()
+      }
+    }
+
     handleBackdropClick (event) {
       const backdrop = this.shadowRoot.querySelector(".backdrop")
       if (event.composedPath().includes(backdrop)) {
@@ -107,6 +116,10 @@ if (!window.customElements.get("my-modal")) {
         <style>
           :host {
             display: none;
+            position: fixed;
+            inset: 0;
+            height: 100vh;
+            width: 100vw;
           }
 
           :host([open]) {

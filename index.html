@@ -9,14 +9,30 @@
         box-sizing: border-box;
       }
       html, body {
-        height: 100%;
         min-height: 100%;
         line-height: 1.6;
         margin: 0;
         padding: 0;
       }
 
-      :focus {
+      .opacity-0 {
+        opacity: 0;
+      }
+
+      .opacity-0:focus {
+        opacity: 1;
+      }
+
+      .visually-hidden:not(:focus-within) {
+        clip-path: inset(50%);
+        height: 1px;
+        overflow: hidden;
+        position: absolute;
+        white-space: nowrap;
+        width: 1px;
+      }
+
+      :not(tab-test-1):focus {
         outline: 3px solid blue;
       }
 
@@ -122,10 +138,7 @@
 
       <p>
       <code>focus-hunter</code> traps support multiple levels of focus trapping.
-      It does so by maintaining a <code>Set</code> on <code>window.focusHunter.trapStack</code>
-
-      <br>
-
+      It does so by maintaining a <code>Set</code> on <code>window.focusHunter.trapStack</code>.
       Try having multiple trap stacks enabled at once.
       </p>
 
@@ -153,7 +166,9 @@
         I'm a focus trap with <button>many</button> <a>Link without an href</a> <a href="#">Link with an href</a> <input value="elements">
 
         <button style="display: none;">Display none button</button>
-        <button style="opacity: 0;">Opacity 0 button</button>
+        <button class="opacity-0">Opacity 0 button</button>
+        <button class="visually-hidden">Visually Hidden button</button>
+        <button inert>Inert Button</button>
 
         <button style="visibility: hidden;">Hidden button</button>
         <br>

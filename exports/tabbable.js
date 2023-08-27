@@ -37,7 +37,7 @@ export function isTabbable(el) {
   // Anchor tags with no hrefs arent focusable.
   // This is focusable: <a href="">Stuff</a>
   // This is not: <a>Stuff</a>
-  if (["area", "a"].includes(tag) && !el.hasAttribute("href")) return false
+  if (tag === "a" && !el.hasAttribute("href")) return false
 
   const computedStyle = window.getComputedStyle(el)
 

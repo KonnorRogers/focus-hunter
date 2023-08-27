@@ -6,6 +6,7 @@ declare global {
   interface Window {
     focusHunter: {
       trapStack: Set<Trap>
+      rootElementStack: Set<Element>
     }
   }
 }
