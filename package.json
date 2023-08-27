@@ -48,7 +48,8 @@
     "@web/test-runner": "^0.17.0",
     "@web/test-runner-commands": "^0.8.0",
     "@web/test-runner-playwright": "^0.10.1",
-    "focus-hunter": "link:."
+    "focus-hunter": "link:.",
+    "typescript": "^5.2.2"
   },
   "dependencies": {
     "composed-offset-position": "^0.0.4"
