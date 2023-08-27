@@ -1,0 +1,58 @@
+{
+  "name": "focus-hunter",
+  "version": "1.0.0",
+  "description": "A variety of simple components that match an aria-role",
+  "main": "./exports/index.js",
+  "module": "./exports/index.js",
+  "types": "./exports/index.d.ts",
+  "exports": {
+    ".": "./exports/index.js",
+    "./package.json": "./package.json",
+    "./exports/*": "./exports/*/*.js",
+    "./types/*": "./types/*/*.d.ts"
+  },
+  "type": "module",
+  "files": [
+    "exports",
+    "internal",
+    "types",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "rm -rf ./exports/**/*.d.ts && tsc",
+    "start": "web-dev-server --watch",
+    "deploy:patch": "npm run build && npm version patch && npm publish && git push --follow-tags",
+    "deploy:minor": "npm run build && npm version minor && npm publish && git push --follow-tags",
+    "deploy:major": "npm run build && npm version major && npm publish && git push --follow-tags",
+    "test": "web-test-runner"
+  },
+  "keywords": [
+    "web-components",
+    "aria"
+  ],
+  "license": "MIT",
+  "repository": "git@github.com:KonnorRogers/focus-hunter.git",
+  "bugs": {
+    "url": "https://github.com/KonnorRogers/focus-hunter/issues"
+  },
+  "homepage": "https://github.com/KonnorRogers/focus-hunter",
+  "author": "KonnorRogers <konnor5456@gmail.com>",
+  "publishConfig": {
+    "access": "public"
+  },
+  "devDependencies": {
+    "@open-wc/testing": "^3.2.0",
+    "@open-wc/testing-helpers": "^2.3.0",
+    "@web/dev-server": "^0.3.0",
+    "@web/test-runner": "^0.17.0",
+    "@web/test-runner-commands": "^0.8.0",
+    "@web/test-runner-playwright": "^0.10.1",
+    "focus-hunter": "link:.",
+    "typescript": "^5.2.2"
+  },
+  "dependencies": {
+    "composed-offset-position": "^0.0.4",
+    "gh-pages": "^6.0.0"
+  }
+}
