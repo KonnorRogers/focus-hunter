@@ -545,6 +545,7 @@ if (!window.customElements.get("my-modal")) {
       this.trap = new Trap({ rootElement: this });
       this.setEvent(this.handleBackdropClick);
       this.setEvent(this.handleCloseButtonClick);
+      this.setEvent(this.handleEscKey);
 
       this.addEventListener("click", this.events.get(this.handleBackdropClick));
       this.addEventListener("click", this.events.get(this.handleCloseButtonClick));
@@ -565,12 +566,24 @@ if (!window.customElements.get("my-modal")) {
     set open (val) {
       this.__open = Boolean(val);
 
+
+      this.setEvent(this.handleEscKey);
+
       if (val === true) {
+        document.addEventListener("keydown", this.events.get(this.handleEscKey));
         this.trap?.start();
         this.setAttribute("open", "");
       } else {
         this.trap?.stop();
+        document.removeEventListener("keydown", this.events.get(this.handleEscKey));
         this.removeAttribute("open");
+      }
+    }
+
+    handleEscKey (event) {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        this.open = false;
       }
     }
 
