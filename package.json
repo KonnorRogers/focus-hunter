@@ -53,12 +53,12 @@
     "@web/test-runner-commands": "^0.8.0",
     "@web/test-runner-playwright": "^0.10.1",
     "focus-hunter": "link:.",
+    "gh-pages": "^6.0.0",
     "rimraf": "^5.0.1",
     "rollup": "^3.28.1",
     "typescript": "^5.2.2"
   },
   "dependencies": {
-    "composed-offset-position": "^0.0.4",
-    "gh-pages": "^6.0.0"
+    "composed-offset-position": "^0.0.4"
   }
 }
