@@ -89,7 +89,7 @@ The above was removed from `exports/tabbable.js` because `aria-disabled` element
 +  // Anchor tags with no hrefs arent focusable.
 +  // This is focusable: <a href="">Stuff</a>
 +  // This is not: <a>Stuff</a>
-+  if (["a", "area"].includes(tag) && el.getAttribute("href") == null) return false
++  if ("a" === tag && el.getAttribute("href") == null) return false
 ```
 
 While not a big deal, anchor elements without an `href` attribute were getting tripped up.
