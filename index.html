@@ -1,23 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title></title>
+    <title>Focus Hunter</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="apple-touch-icon" sizes="180x180" href="/site/apple-touch-icon.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="/site/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="/site/favicon-16x16.png">
-    <link rel="manifest" href="/site/site.webmanifest">
 
-    <script async src="https://ga.jspm.io/npm:es-module-shims@1.8.0/dist/es-module-shims.js"></script>
-    <!-- https://generator.jspm.io/#U2NhYGBkDM0rySzJSU1hKEpNTC5xMLTQM9Az0C1K1jMAAKFS5w0gAA -->
-    <script type="importmap">
-      {
-        "imports": {
-          "composed-offset-position": "./node_modules/composed-offset-position/dist/composed-offset-position.esm.js"
-        }
-      }
-    </script>
+    <link rel="apple-touch-icon" sizes="180x180" href="./site/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="./site/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="./site/favicon-16x16.png">
+    <link rel="manifest" href="./site/site.webmanifest">
+
     <style>
       *, *::after, *::before {
         box-sizing: border-box;
@@ -127,7 +119,6 @@
         Focus Trapping
       </h1>
 
-
       <p>
       <code>focus-hunter</code> traps support multiple levels of focus trapping.
       It does so by maintaining a <code>Set</code> on <code>window.focusHunter.trapStack</code>.
@@ -195,7 +186,7 @@
 
     <script type="module">
       import "./__tests__/fixtures/components.js"
-      import { Trap } from "../exports/focus-hunter.js"
+      import { Trap } from "./exports/focus-hunter.js"
 
       document.querySelector("#modal-toggle").addEventListener("click", () => document.querySelector("tab-test-1").shadowRoot.querySelector("my-modal").show())
 

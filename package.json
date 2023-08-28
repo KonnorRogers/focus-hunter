@@ -20,11 +20,13 @@
     "LICENSE"
   ],
   "scripts": {
-    "build": "rm -rf ./exports/**/*.d.ts && tsc",
+    "build": "rimraf -g \"./exports/**/*.d.ts\" && tsc",
+    "build:site": "rollup -c ./rollup.config.js",
     "start": "web-dev-server --watch",
     "deploy:patch": "npm run build && npm version patch && npm publish && git push --follow-tags",
     "deploy:minor": "npm run build && npm version minor && npm publish && git push --follow-tags",
     "deploy:major": "npm run build && npm version major && npm publish && git push --follow-tags",
+    "deploy:site": "npm run build && npm run build:site && gh-pages -d ./www -b gh-pages",
     "test": "web-test-runner"
   },
   "keywords": [
@@ -44,11 +46,15 @@
   "devDependencies": {
     "@open-wc/testing": "^3.2.0",
     "@open-wc/testing-helpers": "^2.3.0",
+    "@rollup/plugin-node-resolve": "^15.2.1",
     "@web/dev-server": "^0.3.0",
+    "@web/rollup-plugin-html": "^2.0.0",
     "@web/test-runner": "^0.17.0",
     "@web/test-runner-commands": "^0.8.0",
     "@web/test-runner-playwright": "^0.10.1",
     "focus-hunter": "link:.",
+    "rimraf": "^5.0.1",
+    "rollup": "^3.28.1",
     "typescript": "^5.2.2"
   },
   "dependencies": {
