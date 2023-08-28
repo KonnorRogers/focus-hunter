@@ -4,7 +4,7 @@
 /** @type {import("@web/dev-server").DevServerConfig} */
 export default {
   rootDir: '.',
-  // nodeResolve: true,
+  nodeResolve: true,
   open: true,
   http2: true,
   watch: process.argv.includes("--watch"),
