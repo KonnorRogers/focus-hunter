@@ -20,8 +20,5 @@ jobs:
           cache: 'pnpm'
       - name: Install dependencies
         run: pnpm install
-      - name: PNPM run build
-        run: pnpm run build
       - name: Publish
-        run: pnpm exec gh-pages -d . -b gh-pages
-
+        run: pnpm run deploy:site
