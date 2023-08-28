@@ -2,11 +2,11 @@
   "name": "focus-hunter",
   "version": "1.0.0",
   "description": "A variety of simple components that match an aria-role",
-  "main": "./exports/index.js",
-  "module": "./exports/index.js",
-  "types": "./exports/index.d.ts",
+  "main": "./exports/focus-hunter.js",
+  "module": "./exports/focus-hunter.js",
+  "types": "./exports/focus-hunter.d.ts",
   "exports": {
-    ".": "./exports/index.js",
+    ".": "./exports/focus-hunter.js",
     "./package.json": "./package.json",
     "./exports/*": "./exports/*/*.js",
     "./types/*": "./types/*/*.d.ts"
