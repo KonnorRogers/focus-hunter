@@ -14,6 +14,14 @@ Because focus trapping sucks. But its a necessary evil.
 
 - This solution has been largely extracted from [Shoelace](https://shoelace.style)
 
+## Differences from Focus Trap
+
+Focus Hunter doesn't aim to do everything. It tries its best to keep a small minimal API and get out of your way.
+This is reflected in bundle size.
+
+`focus-hunter` is `~1.5kb` minified + gzipped.
+`focus-trap` is `~5.5kb` minified + gzipped.
+
 ## Installation
 
 ```bash
@@ -47,6 +55,16 @@ const trap = new Trap({
 
 Focus Trap is allowed to have multiple traps. It keeps track of the stacks using `window.focusHunter.trapStack` which
 is implemented via a `Set`.
+
+There is also a stack of rootElements at `window.focusHunter.rootElementStack`
+
+There 2 stacks are checked when you call `trap.start()` to ensure the rootElement isn't already being trapped and that
+the trap isn't already active.
+
+```js
+window.focusHunter.trapStack // => Set
+window.focusHunter.rootElementStack // => Set
+```
 
 ## A note on iframes
 

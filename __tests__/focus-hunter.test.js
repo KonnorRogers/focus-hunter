@@ -4,7 +4,6 @@ import { Trap } from '../exports/focus-hunter.js'
 import { activeElements, deepestActiveElement } from '../exports/active-elements.js';
 import { sendKeys } from '@web/test-runner-commands';
 import "./fixtures/components.js"
-import { getTabbableElements } from '../exports/tabbable.js';
 
 /**
  * @param {string[]} keys - Keys to hold down
@@ -88,6 +87,78 @@ test("Should account for the initially focused element", async () => {
   await holdShiftKey(async () => await sendKeys({ press: tabKey }))
   expect(deepestActiveElement()).to.equal(el.querySelectorAll("button")[1])
 })
+
+test("Should check the 'rootElementStack' and 'trapStack' prior to adding / removing traps", async () => {
+  const rootElement = await fixture(html`<button>button</button>`)
+
+  const trap = new Trap({ rootElement })
+
+  const { trapStack, rootElementStack } = window.focusHunter
+
+  expect(trapStack).to.be.instanceof(Set)
+  expect(rootElementStack).to.be.instanceof(Set)
+
+  expect(trapStack.size).to.equal(0)
+  expect(rootElementStack.size).to.equal(0)
+
+  expect(trap.isActive()).to.equal(false)
+
+  trap.start()
+
+  expect(trap.isActive()).to.equal(true)
+
+  expect(trapStack.size).to.equal(1)
+  expect(rootElementStack.size).to.equal(1)
+
+  expect([...trapStack.values()][0]).to.equal(trap)
+  expect([...rootElementStack.values()][0]).to.equal(rootElement)
+
+  trap.stop()
+
+  expect(trapStack.size).to.equal(0)
+  expect(rootElementStack.size).to.equal(0)
+
+  expect(trap.isActive()).to.equal(false)
+})
+
+test("Cannot be two different traps on the same rootElement", async () => {
+  const rootElement = await fixture(html`<button>button</button>`)
+
+  const trap1 = new Trap({ rootElement })
+  const trap2 = new Trap({ rootElement })
+
+  const { trapStack, rootElementStack } = window.focusHunter
+
+  // Both inactive
+  expect(trap1.isActive()).to.equal(false)
+  expect(trap2.isActive()).to.equal(false)
+
+  trap1.start()
+
+  // Only trap 1 active
+  expect(trap1.isActive()).to.equal(true)
+  expect(trap2.isActive()).to.equal(false)
+  expect(trapStack.size).to.equal(1)
+  expect(rootElementStack.size).to.equal(1)
+
+  trap2.start()
+
+  // Try to start trap2 after trap1 has already been started on the same rootElement
+  expect(trap1.isActive()).to.equal(true)
+  expect(trap2.isActive()).to.equal(false)
+  expect(trapStack.size).to.equal(1)
+  expect(rootElementStack.size).to.equal(1)
+
+  // Stop trap 1, now lets activate trap 2
+  trap1.stop()
+  trap2.start()
+
+  expect(trap1.isActive()).to.equal(false)
+  expect(trap2.isActive()).to.equal(true)
+  expect(trapStack.size).to.equal(1)
+  expect(rootElementStack.size).to.equal(1)
+})
+
 
 test("Activating multiple traps", async () => {
   const el1 = await fixture(html`
