@@ -1,7 +1,7 @@
 {
   "name": "focus-hunter",
   "version": "1.0.3",
-  "description": "A variety of simple components that match an aria-role",
+  "description": "A tiny focus trapping utility that respects shadow DOMs and slots.",
   "main": "./exports/focus-hunter.js",
   "module": "./exports/focus-hunter.js",
   "types": "./exports/focus-hunter.d.ts",
@@ -31,7 +31,11 @@
   },
   "keywords": [
     "web-components",
-    "aria"
+    "aria",
+    "focus",
+    "trap",
+    "focus-trap",
+    "focus trap"
   ],
   "license": "MIT",
   "repository": "git@github.com:KonnorRogers/focus-hunter.git",

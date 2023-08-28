@@ -8,6 +8,10 @@ Focus trapping made easy for things like Dialogs.
 
 Because focus trapping sucks. But its a necessary evil.
 
+## Demo
+
+<https://konnorrogers.github.io/focus-hunter>
+
 ## Prior Art
 
 - [Focus Trap](https://github.com/focus-trap/focus-trap) was attempted to be used, but was quite big (~5kb) and didn't handle multiple levels of shadow DOM. It is however a big inspiration for this library.
