@@ -1,27 +1,13 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <title></title>
+<!DOCTYPE html><html lang="en"><head>
+    <title>Focus Hunter</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <base href="/focus-hunter">
+    <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16x16.png">
+    <link rel="manifest" href="assets/site.webmanifest">
 
-    <link rel="apple-touch-icon" sizes="180x180" href="/site/apple-touch-icon.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="/site/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="/site/favicon-16x16.png">
-    <link rel="manifest" href="/site/site.webmanifest">
-
-    <script async src="https://ga.jspm.io/npm:es-module-shims@1.8.0/dist/es-module-shims.js"></script>
-    <!-- https://generator.jspm.io/#U2NhYGBkDM0rySzJSU1hKEpNTC5xMLTQM9Az0C1K1jMAAKFS5w0gAA -->
-    <script type="importmap">
-      {
-        "imports": {
-          "composed-offset-position": "./node_modules/composed-offset-position/dist/composed-offset-position.esm.js",
-          "focus-hunter": "./exports/focus-hunter.js"
-        }
-      }
-    </script>
     <style>
       *, *::after, *::before {
         box-sizing: border-box;
@@ -114,7 +100,7 @@
 
         <mark>Before you try the demos, if you're using macOS, make sure you have enabled keyboard navigation in order to use the Tab key to move focus between all controls.</mark>
 
-        <p>In Ventura (v13), you'll find this under <code>System Settings > Keyboard</code>. Prior to Ventura, it may have been under <code>System Settings > General</code>.</p>
+        <p>In Ventura (v13), you'll find this under <code>System Settings &gt; Keyboard</code>. Prior to Ventura, it may have been under <code>System Settings &gt; General</code>.</p>
 
         <p>FireFox and Safari, for example, respect this setting and without it enabled, you won't get a good experience. Chrome appears to ignore it (at least in v109). While focus-trap will still trap all the right nodes, the browser/OS will not let you access all tabbable nodes on the page, nor in any traps you activate, while using the Tab key.</p>
       </blockquote>
@@ -130,7 +116,6 @@
       <h1>
         Focus Trapping
       </h1>
-
 
       <p>
       <code>focus-hunter</code> traps support multiple levels of focus trapping.
@@ -169,7 +154,7 @@
         <br>
         <button class="visually-hidden">Visually Hidden button</button>
         <br>
-        <button inert>Inert Button</button>
+        <button inert="">Inert Button</button>
         <br>
         <button style="visibility: hidden;">Hidden button</button>
         <br>
@@ -197,27 +182,7 @@
       </div>
     </main>
 
-    <script type="module" src="/__tests__/fixtures/components.js"></script>
-    <script type="module">
-      import { Trap } from "focus-hunter"
+    
+  
 
-      document.querySelector("#modal-toggle").addEventListener("click", () => document.querySelector("tab-test-1").shadowRoot.querySelector("my-modal").show())
-
-      document.querySelectorAll(".js-activate-trap").forEach((el) => el.addEventListener("click", (evt) => {
-        const rootElement = evt.currentTarget.nextElementSibling
-        if (!rootElement.trap) {
-          rootElement.trap = new Trap({ rootElement })
-        }
-        rootElement.trap.start()
-        rootElement.classList.add("trap--active")
-        console.log(rootElement)
-      }))
-
-      document.querySelectorAll(".js-deactivate-trap").forEach((el) => el.addEventListener("click", (evt) => {
-        const rootElement = evt.target.closest(".trap")
-        rootElement.trap?.stop()
-        rootElement.classList.remove("trap--active")
-      }))
-    </script>
-  </body>
-</html>
+<script type="module" src="./inline-module-9e804879e37a77d0185feb25684c241c.js"></script></body></html>
