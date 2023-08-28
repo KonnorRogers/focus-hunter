@@ -54,6 +54,7 @@
     "@web/test-runner-playwright": "^0.10.1",
     "focus-hunter": "link:.",
     "gh-pages": "^6.0.0",
+    "playwright": "^1.37.1",
     "rimraf": "^5.0.1",
     "rollup": "^3.28.1",
     "typescript": "^5.2.2"
