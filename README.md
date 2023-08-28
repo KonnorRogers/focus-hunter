@@ -1,3 +1,5 @@
+![Bundle Size Badge](https://deno.bundlejs.com/?q=focus-hunter&badge)
+
 ## Purpose
 
 Focus trapping made easy for things like Dialogs.
