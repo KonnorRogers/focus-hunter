@@ -8,8 +8,10 @@
   "exports": {
     ".": "./exports/focus-hunter.js",
     "./package.json": "./package.json",
-    "./exports/*": "./exports/*/*.js",
-    "./types/*": "./types/*/*.d.ts"
+    "./exports/*.js": "./exports/*.js",
+    "./exports/*": "./exports/*",
+    "./types/*": "./types/*.d.ts"
+
   },
   "type": "module",
   "files": [
