@@ -317,3 +317,56 @@ test('Should allow tabbing to slotted elements via composed shadow doms', async 
   await holdShiftKey(async () => await sendKeys({ press: tabKey }));
   expect(activeElementsArray()).to.include(focusSix);
 });
+
+
+test('Should adjust current focus based on external focus events', async () => {
+  const el = await fixture(html`
+    <tab-test-1>
+      <div slot="label">
+        <button id="focus-1">Focus 1</button>
+      </div>
+
+      <div>
+        <!-- Focus 2 lives as the close-button from <sl-modal> -->
+        <button id="focus-3">Focus 3</button>
+        <button id="focus-4">Focus 4</button>
+        <input id="focus-5" value="Focus 5">
+      </div>
+
+      <div slot="footer">
+        <div id="focus-6" tabindex="0">Focus 6</div>
+        <button tabindex="-1">No Focus</button>
+      </div>
+    </tab-test-1>
+  `);
+
+  const modal = el.shadowRoot?.querySelector('my-modal');
+
+  // const focusZero = modal.shadowRoot?.querySelector("[role='dialog']");
+  //
+  // if (focusZero === null || focusZero === undefined) throw Error('Could not find dialog panel inside <my-modal>');
+  // const focusOne = el.querySelector('#focus-1');
+  // const focusTwo = modal.shadowRoot?.querySelector("[part~='close-button']");
+
+  // if (focusTwo === null || focusTwo === undefined) throw Error('Could not find close button inside <sl-modal>');
+
+  // const focusThree = el.querySelector('#focus-3');
+  const focusFour = el.querySelector('#focus-4');
+  const focusFive = el.querySelector('#focus-5');
+  const focusSix = el.querySelector('#focus-6');
+
+  modal.show()
+  await aTimeout(1)
+
+  focusFive.focus()
+
+  await sendKeys({ press: tabKey });
+  expect(activeElementsArray()).to.include(focusSix);
+  expect(deepestActiveElement()).to.equal(focusSix)
+
+  focusFive.focus()
+
+  await holdShiftKey(async () => await sendKeys({ press: tabKey }));
+  expect(activeElementsArray()).to.include(focusFour);
+  expect(deepestActiveElement()).to.equal(focusFour)
+})

@@ -1,5 +1,5 @@
 // @ts-check
-import { activeElements, deepestActiveElement } from './active-elements.js';
+import { deepestActiveElement } from './active-elements.js';
 import { getTabbableElements } from './tabbable.js';
 
 /**
@@ -172,27 +172,6 @@ export class Trap {
   };
 
   /**
-   * Checks if the `startElement` is already focused. This is important if the modal already
-   *   has an existing focused prior to the first tab key.
-   * @param {ShadowRoot | Element} startElement
-   */
-  startElementAlreadyFocused(startElement) {
-    const els = activeElements()
-
-    while (true) {
-      const next = els.next()
-
-      const activeElement = next.value
-
-      if (next.done) return false
-
-      if (startElement === activeElement) {
-        return true;
-      }
-    }
-  }
-
-  /**
    * @param {KeyboardEvent} event
    */
   handleKeyDown = (event) => {
@@ -216,7 +195,8 @@ export class Trap {
 
     const start = tabbableElements[0]
 
-    let currentFocusIndex = tabbableElements.findIndex((el) => el === this.currentFocus)
+    const currentFocus = deepestActiveElement()
+    let currentFocusIndex = tabbableElements.findIndex((el) => el === currentFocus)
 
     if (currentFocusIndex === -1) {
       this.currentFocus = (/** @type {HTMLElement} */ (start));
