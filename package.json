@@ -65,6 +65,5 @@
     "typescript": "^5.2.2"
   },
   "dependencies": {
-    "composed-offset-position": "^0.0.4"
   }
 }
