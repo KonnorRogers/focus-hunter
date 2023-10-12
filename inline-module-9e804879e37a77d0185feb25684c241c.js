@@ -50,49 +50,19 @@ function deepestActiveElement (activeElement = document.activeElement) {
   return end;
 }
 
-/* eslint-disable @typescript-eslint/ban-types */
-function offsetParent(element) {
-    return offsetParentPolyfill(element);
-}
-function flatTreeParent(element) {
-    if (element.assignedSlot) {
-        return element.assignedSlot;
-    }
-    if (element.parentNode instanceof ShadowRoot) {
-        return element.parentNode.host;
-    }
-    return element.parentNode;
-}
-function offsetParentPolyfill(element) {
-    // Do an initial walk to check for display:none ancestors.
-    for (let ancestor = element; ancestor; ancestor = flatTreeParent(ancestor)) {
-        if (!(ancestor instanceof Element)) {
-            continue;
-        }
-        if (getComputedStyle(ancestor).display === 'none') {
-            return null;
-        }
-    }
-    for (let ancestor = flatTreeParent(element); ancestor; ancestor = flatTreeParent(ancestor)) {
-        if (!(ancestor instanceof Element)) {
-            continue;
-        }
-        const style = getComputedStyle(ancestor);
-        // Display:contents nodes aren't in the layout tree so they should be skipped.
-        if (style.display === 'contents') {
-            continue;
-        }
-        if (style.position !== 'static' || style.filter !== 'none') {
-            return ancestor;
-        }
-        if (ancestor.tagName === 'BODY') {
-            return ancestor;
-        }
-    }
-    return null;
-}
-
 // @ts-check
+// It doesn't technically check visibility, it checks if the element has been rendered and can maybe possibly be tabbed to.
+// This is a workaround for shadowroots not having an `offsetParent`
+// https://stackoverflow.com/questions/19669786/check-if-element-is-visible-in-dom
+// Previously, we used https://www.npmjs.com/package/composed-offset-position, but recursing up an entire
+// node tree took up a lot of CPU cycles and made focus traps unusable in Chrome / Edge.
+/**
+ * @param {HTMLElement} elem
+ * @returns {boolean}
+ */
+function isTakingUpSpace(elem) {
+  return Boolean(elem.offsetParent || elem.offsetWidth || elem.offsetHeight || elem.getClientRects().length);
+}
 
 /**
  * Determines if the specified element is tabbable using heuristics inspired by https://github.com/focus-trap/tabbable
@@ -120,8 +90,7 @@ function isTabbable(el) {
   // Elements that are hidden have no offsetParent and are not tabbable
   // offsetParent() is added because otherwise it misses elements in Safari
   if (
-    (/** @type {HTMLElement} */ (el)).offsetParent == null
-    && offsetParent(/** @type {HTMLElement} */ (el)) == null
+    !isTakingUpSpace(/** @type {HTMLElement} */ (el))
   )
   {
     return false;
