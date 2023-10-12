@@ -1,5 +1,16 @@
 // @ts-check
-import { offsetParent } from 'composed-offset-position';
+// It doesn't technically check visibility, it checks if the element has been rendered and can maybe possibly be tabbed to.
+// This is a workaround for shadowroots not having an `offsetParent`
+// https://stackoverflow.com/questions/19669786/check-if-element-is-visible-in-dom
+// Previously, we used https://www.npmjs.com/package/composed-offset-position, but recursing up an entire
+// node tree took up a lot of CPU cycles and made focus traps unusable in Chrome / Edge.
+/**
+ * @param {HTMLElement} elem
+ * @returns {boolean}
+ */
+function isTakingUpSpace(elem) {
+  return Boolean(elem.offsetParent || elem.offsetWidth || elem.offsetHeight || elem.getClientRects().length);
+}
 
 /**
  * Determines if the specified element is tabbable using heuristics inspired by https://github.com/focus-trap/tabbable
@@ -27,8 +38,7 @@ export function isTabbable(el) {
   // Elements that are hidden have no offsetParent and are not tabbable
   // offsetParent() is added because otherwise it misses elements in Safari
   if (
-    (/** @type {HTMLElement} */ (el)).offsetParent == null
-    && offsetParent(/** @type {HTMLElement} */ (el)) == null
+    !isTakingUpSpace(/** @type {HTMLElement} */ (el))
   )
   {
     return false;
