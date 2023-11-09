@@ -343,31 +343,30 @@ class Trap {
    * this is for the off chance someone has managed to escape the focus.
    */
   resetFocus() {
-    if (this.isActive()) {
-      if (!this.rootElement.matches(':focus-within')) {
-        let target = null;
+    if (!this.isActive()) return
+    if (this.rootElement.matches(':focus-within')) return
 
-        const tabbableElements = getTabbableElements(/** @type {ShadowRoot | HTMLElement} */ (this.rootElement));
+    let target = null;
 
-        if (this.tabDirection === "forward") {
-          target = tabbableElements.next().value;
-        } else if (this.tabDirection === "backward") {
-          while (true) {
-            const next = tabbableElements.next();
+    const tabbableElements = getTabbableElements(/** @type {ShadowRoot | HTMLElement} */ (this.rootElement));
 
-            if (next.done) {
-              break
-            }
+    if (this.tabDirection === "forward") {
+      target = tabbableElements.next().value;
+    } else if (this.tabDirection === "backward") {
+      while (true) {
+        const next = tabbableElements.next();
 
-            target = next.value;
-          }
+        if (next.done) {
+          break
         }
 
-        if (target && typeof target?.focus === 'function') {
-          this.currentFocus = target;
-          target.focus({ preventScroll: false });
-        }
+        target = next.value;
       }
+    }
+
+    if (target && typeof target?.focus === 'function') {
+      this.currentFocus = target;
+      target.focus({ preventScroll: false });
     }
   }
 
@@ -375,6 +374,7 @@ class Trap {
    * @param {FocusEvent} _event
    */
   handleFocusIn = (_event) => {
+    if (!this.isActive()) return
     this.resetFocus();
   };
 
@@ -383,6 +383,7 @@ class Trap {
    */
   handleKeyDown = (event) => {
     if (event.key !== 'Tab') return;
+    if (!this.isActive()) return
 
     if (event.shiftKey) {
       this.tabDirection = 'backward';
