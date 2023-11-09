@@ -1,6 +1,6 @@
 {
   "name": "focus-hunter",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "A tiny focus trapping utility that respects shadow DOMs and slots.",
   "main": "./exports/focus-hunter.js",
   "module": "./exports/focus-hunter.js",
