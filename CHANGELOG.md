@@ -1,3 +1,7 @@
+## 1.0.9
+
+- Fixed a bug where tabbing into elements wouldnt scroll it into view.
+
 ## 1.0.8
 
 - Fixed a bug where `event.preventDefault()` was being called when the current trap wasn't active.
