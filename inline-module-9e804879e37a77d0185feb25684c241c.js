@@ -366,7 +366,7 @@ class Trap {
 
     if (target && typeof target?.focus === 'function') {
       this.currentFocus = target;
-      target.focus({ preventScroll: false });
+      target.focus({ preventScroll: this.preventScroll });
     }
   }
 
@@ -423,7 +423,7 @@ class Trap {
     }
 
     this.currentFocus = /** @type {HTMLElement} */ (tabbableElements[currentFocusIndex]);
-    this.currentFocus?.focus({ preventScroll: true });
+    this.currentFocus?.focus({ preventScroll: this.preventScroll });
   }
 
 
