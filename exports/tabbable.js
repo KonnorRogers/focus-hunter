@@ -1,16 +1,33 @@
 // @ts-check
-// It doesn't technically check visibility, it checks if the element has been rendered and can maybe possibly be tabbed to.
-// This is a workaround for shadowroots not having an `offsetParent`
-// https://stackoverflow.com/questions/19669786/check-if-element-is-visible-in-dom
-// Previously, we used https://www.npmjs.com/package/composed-offset-position, but recursing up an entire
-// node tree took up a lot of CPU cycles and made focus traps unusable in Chrome / Edge.
+
+// Cached compute style calls. This is specifically for browsers that dont support `checkVisibility()`.
+// computedStyle calls are "live" so they only need to be retrieved once for an element.
+
+const computedStyleMap = /** @type {WeakMap<Element, CSSStyleDeclaration>} */ (new WeakMap())
+
 /**
- * @param {HTMLElement} elem
- * @returns {boolean}
+ * @param {Element} el
  */
-function isTakingUpSpace(elem) {
-  return Boolean(elem.offsetParent || elem.offsetWidth || elem.offsetHeight || elem.getClientRects().length);
+function isVisible(el) {
+  // This is the fastest check, but isn't supported in Safari.
+  if (typeof el.checkVisibility === 'function') {
+    return el.checkVisibility({ checkOpacity: false });
+  }
+
+  // Fallback "polyfill" for "checkVisibility"
+  /**
+   * @type {CSSStyleDeclaration | undefined}
+   */
+  let computedStyle = computedStyleMap.get(el);
+
+  if (!computedStyle) {
+    computedStyle = window.getComputedStyle(el, null);
+    computedStyleMap.set(el, computedStyle);
+  }
+
+  return computedStyle.visibility !== 'hidden' && computedStyle.display !== 'none';
 }
+
 
 /**
  * Determines if the specified element is tabbable using heuristics inspired by https://github.com/focus-trap/tabbable
@@ -38,7 +55,7 @@ export function isTabbable(el) {
   // Elements that are hidden have no offsetParent and are not tabbable
   // offsetParent() is added because otherwise it misses elements in Safari
   if (
-    !isTakingUpSpace(/** @type {HTMLElement} */ (el))
+    !isVisible(/** @type {HTMLElement} */ (el))
   )
   {
     return false;
@@ -48,13 +65,6 @@ export function isTabbable(el) {
   // This is focusable: <a href="">Stuff</a>
   // This is not: <a>Stuff</a>
   if (tag === "a" && !el.hasAttribute("href")) return false
-
-  const computedStyle = window.getComputedStyle(el)
-
-  // Elements without visibility are not tabbable
-  if (computedStyle.visibility === 'hidden') {
-    return false;
-  }
 
   // Audio and video elements with the controls attribute are tabbable
   if ((tag === 'audio' || tag === 'video') && el.hasAttribute('controls')) {
@@ -86,8 +96,14 @@ export function* getTabbableElements(root) {
    */
   const tabbableElements = new Set()
 
+  /**
+   * We use this WeakMap to make sure we're not checking the same element multiple times.
+   * @type {WeakMap<Element, boolean>}
+   */
+  const checkedElements = new WeakMap()
+
   // Collect all elements including the root
-  for (const el of [...walk(root, root, tabbableElements)].sort(sortByTabIndex)) {
+  for (const el of [...walk(root, root, tabbableElements, checkedElements)].sort(sortByTabIndex)) {
     yield el
   }
 }
@@ -111,14 +127,21 @@ function sortByTabIndex(a, b) {
   * @param {Element | ShadowRoot} el
   * @param {Element | ShadowRoot} rootElement
   * @param {Set<Element>} tabbableElements
+  * @param {WeakMap<Element, boolean>} checkedElements
   * @return {Generator<Element>}
   */
-function* walk(el, rootElement, tabbableElements) {
+function* walk(el, rootElement, tabbableElements, checkedElements) {
   if (el instanceof Element) {
     // if the element has "inert" we can just no-op it and all its children.
     if (el.hasAttribute('inert')) {
       return;
     }
+
+    if (checkedElements.get(el) === true) {
+      return
+    }
+
+    checkedElements.set(el, true)
 
     if (!tabbableElements.has(el) && isTabbable(el)) {
       tabbableElements.add(el)
@@ -129,18 +152,18 @@ function* walk(el, rootElement, tabbableElements) {
     // Walk slots
     if (el instanceof HTMLSlotElement && !rootHasSlotChildren(el, rootElement)) {
       for (const assignedEl of el.assignedElements({ flatten: true })) {
-        yield* walk(assignedEl, rootElement, tabbableElements);
+        yield* walk(assignedEl, rootElement, tabbableElements, checkedElements);
       }
     }
 
     // Walk  shadow roots
     if (el.shadowRoot !== null && el.shadowRoot.mode === 'open') {
-      yield* walk(el.shadowRoot, rootElement, tabbableElements);
+      yield* walk(el.shadowRoot, rootElement, tabbableElements, checkedElements);
     }
   }
 
   for (const e of Array.from(el.children)) {
-    yield* walk(e, rootElement, tabbableElements)
+    yield* walk(e, rootElement, tabbableElements, checkedElements)
   }
 }
 
