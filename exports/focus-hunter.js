@@ -184,12 +184,11 @@ export class Trap {
       this.tabDirection = 'forward';
     }
 
-    event.preventDefault();
-
     this.adjustFocus()
   };
 
-  adjustFocus () {
+
+  adjustFocus (e) {
     if (!this.isActive()) return
 
     const tabbableElements = [...getTabbableElements(this.rootElement)];
@@ -201,6 +200,10 @@ export class Trap {
 
     if (currentFocusIndex === -1) {
       this.currentFocus = (/** @type {HTMLElement} */ (start));
+
+      if (possiblyHasTabbableChildren(this.currentFocus)) {
+        return
+      }
       this.currentFocus?.focus?.({ preventScroll: this.preventScroll });
       return;
     }
@@ -227,3 +230,22 @@ export class Trap {
     this.tabDirection = 'forward';
   };
 }
+
+
+const elementsWithTabbableControls = [
+  "audio",
+  "video",
+  "iframe"
+]
+
+/**
+  * @param {HTMLElement} element
+  */
+function possiblyHasTabbableChildren (element) {
+  return (
+    elementsWithTabbableControls.includes(element.tagName.toLowerCase())
+    || element.hasAttribute("controls")
+    // Should we add a data-attribute for people to set just in case they have an element where we don't know if it has possibly tabbable elements?
+  )
+}
+
