@@ -37,8 +37,12 @@ function isVisible(el) {
 export function isTabbable(el) {
   const tag = el.tagName.toLowerCase();
 
-  // Elements with a -1 tab index are not tabbable
-  if (Number(el.getAttribute('tabindex')) <= -1) {
+  // Elements that are hidden have no offsetParent and are not tabbable
+  // offsetParent() is added because otherwise it misses elements in Safari
+  if (
+    !isVisible(/** @type {HTMLElement} */ (el))
+  )
+  {
     return false;
   }
 
@@ -47,17 +51,13 @@ export function isTabbable(el) {
     return false;
   }
 
-  // Radios without a checked attribute are not tabbable
-  if (tag === 'input' && el.getAttribute('type') === 'radio' && !el.hasAttribute('checked')) {
-    return false;
+  // Elements with a -1 tab index are not tabbable
+  if (Number(el.getAttribute('tabindex')) >= 0) {
+    return true;
   }
 
-  // Elements that are hidden have no offsetParent and are not tabbable
-  // offsetParent() is added because otherwise it misses elements in Safari
-  if (
-    !isVisible(/** @type {HTMLElement} */ (el))
-  )
-  {
+  // Radios without a checked attribute are not tabbable
+  if (tag === 'input' && el.getAttribute('type') === 'radio' && !el.hasAttribute('checked')) {
     return false;
   }
 
@@ -71,13 +71,8 @@ export function isTabbable(el) {
     return true;
   }
 
-  // Elements with a tabindex other than -1 are tabbable
-  if (el.hasAttribute('tabindex')) {
-    return true;
-  }
-
   // Elements with a contenteditable attribute are tabbable
-  if (el.hasAttribute('contenteditable') && el.getAttribute('contenteditable') !== 'false') {
+  if (el.getAttribute('contenteditable') === 'true') {
     return true;
   }
 
