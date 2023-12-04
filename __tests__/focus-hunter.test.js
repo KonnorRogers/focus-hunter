@@ -61,8 +61,8 @@ test("Should account for the initially focused element", async () => {
   const el = await fixture(html`
     <div>
       <button>Button</button>
-      <a href="">Link</a>
-      <area href="">Area</area>
+      <a href="/">Link</a>
+      <area href="/">Area</area>
       <button>Button 2</button>
     </div>
   `)
@@ -164,8 +164,8 @@ test("Activating multiple traps", async () => {
   const el1 = await fixture(html`
     <div>
       <button>Button</button>
-      <a href="">Link</a>
-      <area href="">Area</area>
+      <a href="/">Link</a>
+      <area href="/">Area</area>
       <button>Button 2</button>
     </div>
   `)
@@ -173,8 +173,8 @@ test("Activating multiple traps", async () => {
   const el2 = await fixture(html`
     <div>
       <button>Button</button>
-      <a href="">Link</a>
-      <area href="">Area</area>
+      <a href="/">Link</a>
+      <area href="/">Area</area>
       <button>Button 2</button>
     </div>
   `)

@@ -70,6 +70,17 @@ export class Trap {
      * @type {HTMLElement | undefined | null}
      */
     this.currentFocus = undefined
+
+
+    /**
+     * @type {string[]}
+     */
+    this.elementsWithTabbableControls = [
+      "audio",
+      "video",
+      "iframe"
+    ]
+
   }
 
   /**
@@ -137,6 +148,11 @@ export class Trap {
    */
   resetFocus() {
     if (!this.isActive()) return
+
+    const currentFocus = deepestActiveElement()
+
+    if (currentFocus) this.currentFocus = /** @type {HTMLElement} */ (currentFocus)
+
     if (this.rootElement.matches(':focus-within')) return
 
     let target = null
@@ -184,26 +200,44 @@ export class Trap {
       this.tabDirection = 'forward';
     }
 
-    this.adjustFocus()
+    this.adjustFocus(event)
+    setTimeout(() => this.resetFocus())
   };
 
+  /**
+   * @param {HTMLElement} element
+   */
+  possiblyHasTabbableChildren(element) {
+      return (
+        this.elementsWithTabbableControls.includes(element.tagName.toLowerCase())
+        || element.hasAttribute("controls")
+        // Should we add a data-attribute for people to set just in case they have an element where we don't know if it has possibly tabbable elements?
+      )
+  }
 
-  adjustFocus (e) {
+  /**
+   * @param {Event} event
+   */
+  adjustFocus (event) {
     if (!this.isActive()) return
+
+    const currentFocus = deepestActiveElement()
+    this.previousFocus = currentFocus
+
+    if (this.previousFocus && this.possiblyHasTabbableChildren(this.previousFocus)) {
+      return
+    }
 
     const tabbableElements = [...getTabbableElements(this.rootElement)];
 
     const start = tabbableElements[0]
 
-    const currentFocus = deepestActiveElement()
     let currentFocusIndex = tabbableElements.findIndex((el) => el === currentFocus)
 
     if (currentFocusIndex === -1) {
       this.currentFocus = (/** @type {HTMLElement} */ (start));
 
-      if (possiblyHasTabbableChildren(this.currentFocus)) {
-        return
-      }
+      event.preventDefault()
       this.currentFocus?.focus?.({ preventScroll: this.preventScroll });
       return;
     }
@@ -218,7 +252,21 @@ export class Trap {
       currentFocusIndex += addition;
     }
 
-    this.currentFocus = /** @type {HTMLElement} */ (tabbableElements[currentFocusIndex]);
+    const previousFocus = this.currentFocus
+    const nextFocus = /** @type {HTMLElement} */ (tabbableElements[currentFocusIndex])
+
+
+    // This is a special case. We need to make sure we're not calling .focus() if we're already focused on an element
+    // that possibly has "controls"
+    if (this.tabDirection === "backward") {
+      console.log({previousFocus, nextFocus})
+      // if (previousFocus && this.possiblyHasTabbableChildren(previousFocus)) {
+        return
+      // }
+    }
+
+    event.preventDefault()
+    this.currentFocus = nextFocus;
     this.currentFocus?.focus({ preventScroll: this.preventScroll });
   }
 
@@ -230,22 +278,3 @@ export class Trap {
     this.tabDirection = 'forward';
   };
 }
-
-
-const elementsWithTabbableControls = [
-  "audio",
-  "video",
-  "iframe"
-]
-
-/**
-  * @param {HTMLElement} element
-  */
-function possiblyHasTabbableChildren (element) {
-  return (
-    elementsWithTabbableControls.includes(element.tagName.toLowerCase())
-    || element.hasAttribute("controls")
-    // Should we add a data-attribute for people to set just in case they have an element where we don't know if it has possibly tabbable elements?
-  )
-}
-

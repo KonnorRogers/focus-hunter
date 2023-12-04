@@ -46,14 +46,22 @@ export function isTabbable(el) {
     return false;
   }
 
-  // Elements with a disabled attribute are not tabbable
-  if (el.hasAttribute('disabled')) {
+  // Elements with a -1 tab index are not tabbable
+  const tabindex = Number(el.getAttribute('tabindex'))
+  const hasTabindex = el.hasAttribute("tabindex")
+
+  if (hasTabindex && (isNaN(tabindex) || tabindex <= -1)) {
     return false;
   }
 
-  // Elements with a -1 tab index are not tabbable
-  if (Number(el.getAttribute('tabindex')) >= 0) {
-    return true;
+  if (tabindex <= -1) {
+    return false;
+  }
+
+
+  // Elements with a disabled attribute are not tabbable
+  if (el.hasAttribute('disabled')) {
+    return false;
   }
 
   // Radios without a checked attribute are not tabbable
@@ -62,17 +70,22 @@ export function isTabbable(el) {
   }
 
   // Anchor tags with no hrefs arent focusable.
-  // This is focusable: <a href="">Stuff</a>
-  // This is not: <a>Stuff</a>
-  if (tag === "a" && !el.hasAttribute("href")) return false
+  // This is focusable: <a href="/">Stuff</a>
+  // This is not focusable: <a href="">Stuff</a>
+  // This is not focusable: <a>Stuff</a>
+  if (tag === "a" && !el.getAttribute("href")) return false
 
   // Audio and video elements with the controls attribute are tabbable
   if ((tag === 'audio' || tag === 'video') && el.hasAttribute('controls')) {
     return true;
   }
 
+  if (hasTabindex && (tabindex >= 0)) {
+    return true;
+  }
+
   // Elements with a contenteditable attribute are tabbable
-  if (el.getAttribute('contenteditable') === 'true') {
+  if (el.hasAttribute('contenteditable') && el.getAttribute('contenteditable') !== 'false') {
     return true;
   }
 
@@ -173,3 +186,4 @@ function* walk(el, rootElement, tabbableElements, checkedElements) {
 function rootHasSlotChildren (slotElement, rootElement) {
   return (/** @type {ShadowRoot | null} */ (slotElement.getRootNode({ composed: true })))?.host === rootElement;
 }
+
