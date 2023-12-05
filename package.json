@@ -22,7 +22,7 @@
   ],
   "scripts": {
     "build": "rimraf -g \"./exports/**/*.d.ts\" && tsc",
-    "build:site": "rollup -c ./rollup.config.js",
+    "build:site": "rollup -c ./rollup.config.js && cp -R media www/media",
     "start": "web-dev-server --watch",
     "deploy:patch": "npm run build && npm version patch && npm publish && git push --follow-tags",
     "deploy:minor": "npm run build && npm version minor && npm publish && git push --follow-tags",
