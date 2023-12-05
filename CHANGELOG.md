@@ -1,3 +1,8 @@
+## 1.1.0
+
+- Improved the performance of tabbable checking by using `checkVisibility()`
+- Allow focus trapping on native controls for things like `<video>` as well as ceding control to `<iframe>`s.
+
 ## 1.0.9
 
 - Fixed a bug where tabbing into elements wouldnt scroll it into view.
