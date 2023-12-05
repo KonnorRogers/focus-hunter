@@ -258,12 +258,12 @@ export class Trap {
 
     // This is a special case. We need to make sure we're not calling .focus() if we're already focused on an element
     // that possibly has "controls"
-    if (this.tabDirection === "backward") {
-      console.log({previousFocus, nextFocus})
-      // if (previousFocus && this.possiblyHasTabbableChildren(previousFocus)) {
-        return
-      // }
-    }
+    // if (this.tabDirection === "backward") {
+    //   console.log({previousFocus, nextFocus})
+    //   if (previousFocus && this.possiblyHasTabbableChildren(previousFocus)) {
+    //     return
+    //   }
+    // }
 
     event.preventDefault()
     this.currentFocus = nextFocus;
