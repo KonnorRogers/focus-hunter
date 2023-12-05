@@ -73,6 +73,11 @@
         margin: 0;
       }
 
+      iframe, video, img, audio {
+        max-width: 100%;
+        display: inline-block;
+      }
+
       code {
         font-size: 0.95em;
         background-color: hsla(255, 3%, 60%, 0.2);
@@ -179,6 +184,47 @@
         <button tabindex="3">Tabindex 3</button>
         <br><br>
         <button class="js-deactivate-trap">Deactivate Trap</button>
+      </div>
+
+      <h2>
+        Focus Trapping with <code>&lt;iframe&gt;</code>, <code>&lt;video&gt;</code>, and <code>&lt;audio&gt;</code> elements
+      </h2>
+
+      <button class="js-activate-trap">
+        Activate Trap
+      </button>
+
+      <div class="trap">
+        These will allow tabbing into the closed shadow dom of these elements with controls.
+
+        <br>
+        <!-- <iframe></iframe> -->
+        <video controls="" allowfullscreen="" playsinline="" src="./media/video-1.mp4"></video>
+        <br><br>
+        <audio controls="" allowfullscreen="" playsinline="" src="./media/video-1.mp4"></audio>
+        <br><br>
+        <button class="js-deactivate-trap">Deactivate Trap</button>
+      </div>
+
+      <h2>
+        Focus Trapping with <code>&lt;iframe&gt;</code>, <code>&lt;video&gt;</code>, and <code>&lt;audio&gt;</code> elements
+      </h2>
+
+      <button class="js-activate-trap">
+        Activate Trap
+      </button>
+
+      <div class="trap">
+        These will allow tabbing into the closed shadow dom of these elements with controls.
+
+        <br>
+        <!-- <iframe></iframe> -->
+        <video controls="" allowfullscreen="" playsinline="" src="./media/video-1.mp4"></video>
+
+        <br><br>
+        <button class="js-deactivate-trap">Deactivate Trap</button>
+        <br><br>
+        <audio controls="" allowfullscreen="" playsinline="" src="./media/video-1.mp4"></audio>
       </div>
     </main>
 

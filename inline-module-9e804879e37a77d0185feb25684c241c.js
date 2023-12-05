@@ -63,7 +63,7 @@ const computedStyleMap = /** @type {WeakMap<Element, CSSStyleDeclaration>} */ (n
 function isVisible(el) {
   // This is the fastest check, but isn't supported in Safari.
   if (typeof el.checkVisibility === 'function') {
-    return el.checkVisibility({ checkOpacity: false });
+    return el.checkVisibility({ checkOpacity: false, checkVisibilityCSS: true });
   }
 
   // Fallback "polyfill" for "checkVisibility"
@@ -89,21 +89,6 @@ function isVisible(el) {
 function isTabbable(el) {
   const tag = el.tagName.toLowerCase();
 
-  // Elements with a -1 tab index are not tabbable
-  if (Number(el.getAttribute('tabindex')) <= -1) {
-    return false;
-  }
-
-  // Elements with a disabled attribute are not tabbable
-  if (el.hasAttribute('disabled')) {
-    return false;
-  }
-
-  // Radios without a checked attribute are not tabbable
-  if (tag === 'input' && el.getAttribute('type') === 'radio' && !el.hasAttribute('checked')) {
-    return false;
-  }
-
   // Elements that are hidden have no offsetParent and are not tabbable
   // offsetParent() is added because otherwise it misses elements in Safari
   if (
@@ -113,18 +98,45 @@ function isTabbable(el) {
     return false;
   }
 
+  // Elements with a -1 tab index are not tabbable
+  const tabindex = Number(el.getAttribute('tabindex'));
+  const hasTabindex = el.hasAttribute("tabindex");
+
+  if (hasTabindex && (isNaN(tabindex) || tabindex <= -1)) {
+    return false;
+  }
+
+  if (tabindex <= -1) {
+    return false;
+  }
+
+
+  // Elements with a disabled attribute are not tabbable
+  if (el.hasAttribute('disabled')) {
+    return false;
+  }
+
+  if (el.matches("[inert]")) {
+    return false
+  }
+
+  // Radios without a checked attribute are not tabbable
+  if (tag === 'input' && el.getAttribute('type') === 'radio' && !el.hasAttribute('checked')) {
+    return false;
+  }
+
   // Anchor tags with no hrefs arent focusable.
-  // This is focusable: <a href="">Stuff</a>
-  // This is not: <a>Stuff</a>
-  if (tag === "a" && !el.hasAttribute("href")) return false
+  // This is focusable: <a href="/">Stuff</a>
+  // This is not focusable: <a href="">Stuff</a>
+  // This is not focusable: <a>Stuff</a>
+  if (tag === "a" && !el.getAttribute("href")) return false
 
   // Audio and video elements with the controls attribute are tabbable
   if ((tag === 'audio' || tag === 'video') && el.hasAttribute('controls')) {
     return true;
   }
 
-  // Elements with a tabindex other than -1 are tabbable
-  if (el.hasAttribute('tabindex')) {
+  if (hasTabindex && (tabindex >= 0)) {
     return true;
   }
 
@@ -300,6 +312,17 @@ class Trap {
      * @type {HTMLElement | undefined | null}
      */
     this.currentFocus = undefined;
+
+
+    /**
+     * @type {string[]}
+     */
+    this.elementsWithTabbableControls = [
+      "audio",
+      "video",
+      "iframe"
+    ];
+
   }
 
   /**
@@ -367,6 +390,11 @@ class Trap {
    */
   resetFocus() {
     if (!this.isActive()) return
+
+    const currentFocus = deepestActiveElement();
+
+    if (currentFocus) this.currentFocus = /** @type {HTMLElement} */ (currentFocus);
+
     if (this.rootElement.matches(':focus-within')) return
 
     let target = null;
@@ -414,23 +442,44 @@ class Trap {
       this.tabDirection = 'forward';
     }
 
-    event.preventDefault();
-
-    this.adjustFocus();
+    this.adjustFocus(event);
+    setTimeout(() => this.resetFocus());
   };
 
-  adjustFocus () {
+  /**
+   * @param {HTMLElement} element
+   */
+  possiblyHasTabbableChildren(element) {
+      return (
+        this.elementsWithTabbableControls.includes(element.tagName.toLowerCase())
+        || element.hasAttribute("controls")
+        // Should we add a data-attribute for people to set just in case they have an element where we don't know if it has possibly tabbable elements?
+      )
+  }
+
+  /**
+   * @param {Event} event
+   */
+  adjustFocus (event) {
     if (!this.isActive()) return
+
+    const currentFocus = deepestActiveElement();
+    this.previousFocus = currentFocus;
+
+    if (this.previousFocus && this.possiblyHasTabbableChildren(/** @type {HTMLElement} */ (this.previousFocus))) {
+      return
+    }
 
     const tabbableElements = [...getTabbableElements(this.rootElement)];
 
     const start = tabbableElements[0];
 
-    const currentFocus = deepestActiveElement();
     let currentFocusIndex = tabbableElements.findIndex((el) => el === currentFocus);
 
     if (currentFocusIndex === -1) {
       this.currentFocus = (/** @type {HTMLElement} */ (start));
+
+      event.preventDefault();
       this.currentFocus?.focus?.({ preventScroll: this.preventScroll });
       return;
     }
@@ -445,7 +494,24 @@ class Trap {
       currentFocusIndex += addition;
     }
 
-    this.currentFocus = /** @type {HTMLElement} */ (tabbableElements[currentFocusIndex]);
+    const previousFocus = this.currentFocus;
+    const nextFocus = /** @type {HTMLElement} */ (tabbableElements[currentFocusIndex]);
+
+
+    // This is a special case. We need to make sure we're not calling .focus() if we're already focused on an element
+    // that possibly has "controls"
+    if (this.tabDirection === "backward") {
+      if (previousFocus && this.possiblyHasTabbableChildren(previousFocus)) {
+        return
+      }
+
+      if (nextFocus && this.possiblyHasTabbableChildren(nextFocus)) {
+        return
+      }
+    }
+
+    event.preventDefault();
+    this.currentFocus = nextFocus;
     this.currentFocus?.focus({ preventScroll: this.preventScroll });
   }
 
