@@ -252,14 +252,14 @@ export class Trap {
       currentFocusIndex += addition;
     }
 
-    const previousFocus = this.currentFocus
+    this.previousFocus = this.currentFocus
     const nextFocus = /** @type {HTMLElement} */ (tabbableElements[currentFocusIndex])
 
 
     // This is a special case. We need to make sure we're not calling .focus() if we're already focused on an element
     // that possibly has "controls"
     if (this.tabDirection === "backward") {
-      if (previousFocus && this.possiblyHasTabbableChildren(previousFocus)) {
+      if (this.previousFocus && this.possiblyHasTabbableChildren(/** @type {HTMLElement} */ (this.previousFocus))) {
         return
       }
 

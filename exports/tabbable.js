@@ -46,25 +46,20 @@ export function isTabbable(el) {
     return false;
   }
 
-  // Elements with a -1 tab index are not tabbable
   const tabindex = Number(el.getAttribute('tabindex'))
   const hasTabindex = el.hasAttribute("tabindex")
 
+  // elements with a tabindex attribute that is either NaN or <= -1 are not tabbable
   if (hasTabindex && (isNaN(tabindex) || tabindex <= -1)) {
     return false;
   }
-
-  if (tabindex <= -1) {
-    return false;
-  }
-
 
   // Elements with a disabled attribute are not tabbable
   if (el.hasAttribute('disabled')) {
     return false;
   }
 
-  if (el.matches("[inert]")) {
+  if (el.closest("[inert]")) {
     return false
   }
 
@@ -144,8 +139,8 @@ function sortByTabIndex(a, b) {
   */
 function* walk(el, rootElement, tabbableElements, checkedElements) {
   if (el instanceof Element) {
-    // if the element has "inert" we can just no-op it and all its children.
-    if (el.hasAttribute('inert')) {
+    // if the element has "inert" or any of its parents have "inert", we can just no-op it and all its children.
+    if (el.hasAttribute('inert') || el.closest("[inert]")) {
       return;
     }
 
