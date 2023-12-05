@@ -11,7 +11,7 @@ const computedStyleMap = /** @type {WeakMap<Element, CSSStyleDeclaration>} */ (n
 function isVisible(el) {
   // This is the fastest check, but isn't supported in Safari.
   if (typeof el.checkVisibility === 'function') {
-    return el.checkVisibility({ checkOpacity: false });
+    return el.checkVisibility({ checkOpacity: false, checkVisibilityCSS: true });
   }
 
   // Fallback "polyfill" for "checkVisibility"
@@ -62,6 +62,10 @@ export function isTabbable(el) {
   // Elements with a disabled attribute are not tabbable
   if (el.hasAttribute('disabled')) {
     return false;
+  }
+
+  if (el.matches("[inert]")) {
+    return false
   }
 
   // Radios without a checked attribute are not tabbable
