@@ -76,8 +76,8 @@ export class Trap {
      * @type {string[]}
      */
     this.elementsWithTabbableControls = [
-      "audio",
-      "video",
+      // "audio",
+      // "video",
       "iframe"
     ]
 
