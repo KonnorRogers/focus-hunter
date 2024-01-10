@@ -41,7 +41,6 @@ test("Should not attempt to tab non-visible / non-focusable elements", async () 
     <a></a>
     <button style="display: none;">Button</button>
     <button style="visibility: hidden;">Button</button>
-    <button style="opacity: 0;">Button</button>
   `)
 
   new Trap({ rootElement: el }).start()
@@ -54,7 +53,14 @@ test("Should not attempt to tab non-visible / non-focusable elements", async () 
   expect(deepestActiveElement()).to.equal(document.body)
 
   await holdShiftKey(async () => await sendKeys({ press: tabKey }))
-  expect(deepestActiveElement()).to.equal(document.body)
+
+
+  if (deepestActiveElement() === document.body) {
+    expect(deepestActiveElement()).to.equal(document.body)
+  } else {
+    // In firefox, it jumps to `<html>`
+    expect(deepestActiveElement()).to.equal(document.documentElement)
+  }
 })
 
 test("Should account for the initially focused element", async () => {

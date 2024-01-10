@@ -1,6 +1,5 @@
 // @ts-check
-import { activeElements } from './active-elements.js';
-import { deepestActiveElement } from './active-elements.js';
+import { activeElements, deepestActiveElement } from './active-elements.js';
 import { getTabbableElements } from './tabbable.js';
 
 /**
@@ -235,7 +234,12 @@ export class Trap {
 
     const addition = this.tabDirection === 'forward' ? 1 : -1;
 
+    let count = 0
     while(true) {
+      if (count >= tabbableElements.length) {
+        break
+      }
+
       if (currentFocusIndex + addition >= tabbableElements.length) {
         currentFocusIndex = 0;
       } else if (currentFocusIndex + addition < 0) {
@@ -264,9 +268,11 @@ export class Trap {
       this.currentFocus?.focus({ preventScroll: this.preventScroll });
 
       // @ts-expect-error
-      if ([...activeElements()].includes(this.currentFocus)) {
+      if (![...activeElements()].includes(this.previousFocus)) {
         break
       }
+
+      count++
     }
   }
 
