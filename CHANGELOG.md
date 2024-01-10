@@ -1,3 +1,8 @@
+## 1.1.1
+
+- Fixed tabbing into overflowing elements, and reduced the chances of the focus getting "stuck"
+on unrecognized / unfocusable elements.
+
 ## 1.1.0
 
 - Improved the performance of tabbable checking by using `checkVisibility()`

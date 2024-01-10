@@ -7,16 +7,11 @@ const computedStyleMap = /** @type {WeakMap<Element, CSSStyleDeclaration>} */ (n
 
 /**
  * @param {Element} el
+ * @returns {CSSStyleDeclaration}
  */
-function isVisible(el) {
-  // This is the fastest check, but isn't supported in Safari.
-  if (typeof el.checkVisibility === 'function') {
-    return el.checkVisibility({ checkOpacity: false, checkVisibilityCSS: true });
-  }
-
-  // Fallback "polyfill" for "checkVisibility"
+function getCachedComputedStyle(el) {
   /**
-   * @type {CSSStyleDeclaration | undefined}
+   * @type {undefined | CSSStyleDeclaration}
    */
   let computedStyle = computedStyleMap.get(el);
 
@@ -25,7 +20,58 @@ function isVisible(el) {
     computedStyleMap.set(el, computedStyle);
   }
 
+  return /** @type {CSSStyleDeclaration} */ (computedStyle);
+}
+
+/**
+ * @param {Element} el
+ */
+function isVisible(el) {
+  // This is the fastest check, but isn't supported in Safari.
+  if (typeof el.checkVisibility === 'function') {
+    return el.checkVisibility({ checkOpacity: false, checkVisibilityCSS: true });
+  }
+
+  // Fallback "polyfill" for "checkVisibility"
+  const computedStyle = getCachedComputedStyle(el);
+
   return computedStyle.visibility !== 'hidden' && computedStyle.display !== 'none';
+}
+
+/**
+ * While this behavior isn't standard in Safari / Chrome yet, I think it's the most reasonable
+ *   way of handling tabbable overflow areas. Browser sniffing seems gross, and it's the most
+ *   accessible way of handling overflow areas. [Konnor]
+ * @param {Element} el
+ * @return {boolean}
+ */
+function isOverflowingAndTabbable(el) {
+  const computedStyle = getCachedComputedStyle(el);
+
+  const { overflowY, overflowX } = computedStyle;
+
+  if (overflowY === 'scroll' || overflowX === 'scroll') {
+    return true;
+  }
+
+  if (overflowY !== 'auto' || overflowX !== 'auto') {
+    return false;
+  }
+
+  // Always overflow === "auto" by this point
+  const isOverflowingY = el.scrollHeight > el.clientHeight;
+
+  if (isOverflowingY && overflowY === 'auto') {
+    return true;
+  }
+
+  const isOverflowingX = el.scrollWidth > el.clientWidth;
+
+  if (isOverflowingX && overflowX === 'auto') {
+    return true;
+  }
+
+  return false;
 }
 
 
@@ -37,17 +83,9 @@ function isVisible(el) {
 export function isTabbable(el) {
   const tag = el.tagName.toLowerCase();
 
-  // Elements that are hidden have no offsetParent and are not tabbable
-  // offsetParent() is added because otherwise it misses elements in Safari
-  if (
-    !isVisible(/** @type {HTMLElement} */ (el))
-  )
-  {
-    return false;
-  }
+  const tabindex = Number(el.getAttribute('tabindex'));
+  const hasTabindex = el.hasAttribute('tabindex');
 
-  const tabindex = Number(el.getAttribute('tabindex'))
-  const hasTabindex = el.hasAttribute("tabindex")
 
   // elements with a tabindex attribute that is either NaN or <= -1 are not tabbable
   if (hasTabindex && (isNaN(tabindex) || tabindex <= -1)) {
@@ -65,6 +103,13 @@ export function isTabbable(el) {
 
   // Radios without a checked attribute are not tabbable
   if (tag === 'input' && el.getAttribute('type') === 'radio' && !el.hasAttribute('checked')) {
+    return false;
+  }
+
+  // Elements that are hidden have no offsetParent and are not tabbable
+  // offsetParent() is added because otherwise it misses elements in Safari
+  if (!isVisible(/** @type {HTMLElement} */ (el)))
+  {
     return false;
   }
 
@@ -89,7 +134,14 @@ export function isTabbable(el) {
   }
 
   // At this point, the following elements are considered tabbable
-  return ['button', 'input', 'select', 'textarea', 'a', 'audio', 'video', 'summary', 'iframe', 'object', 'embed'].includes(tag);
+  const isNativelyTabbable = ['button', 'input', 'select', 'textarea', 'a', 'audio', 'video', 'summary', 'iframe', 'object', 'embed'].includes(tag);
+
+  if (isNativelyTabbable) {
+    return true;
+  }
+
+  // We save the overflow checks for last, because they're the most expensive
+  return isOverflowingAndTabbable(el);
 }
 
 /**

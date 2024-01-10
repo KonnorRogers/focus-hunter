@@ -1,4 +1,5 @@
 // @ts-check
+import { activeElements } from './active-elements.js';
 import { deepestActiveElement } from './active-elements.js';
 import { getTabbableElements } from './tabbable.js';
 
@@ -230,47 +231,43 @@ export class Trap {
 
     const tabbableElements = [...getTabbableElements(this.rootElement)];
 
-    const start = tabbableElements[0]
-
     let currentFocusIndex = tabbableElements.findIndex((el) => el === currentFocus)
-
-    if (currentFocusIndex === -1) {
-      this.currentFocus = (/** @type {HTMLElement} */ (start));
-
-      event.preventDefault()
-      this.currentFocus?.focus?.({ preventScroll: this.preventScroll });
-      return;
-    }
 
     const addition = this.tabDirection === 'forward' ? 1 : -1;
 
-    if (currentFocusIndex + addition >= tabbableElements.length) {
-      currentFocusIndex = 0;
-    } else if (currentFocusIndex + addition < 0) {
-      currentFocusIndex = tabbableElements.length - 1;
-    } else {
-      currentFocusIndex += addition;
-    }
-
-    this.previousFocus = this.currentFocus
-    const nextFocus = /** @type {HTMLElement} */ (tabbableElements[currentFocusIndex])
-
-
-    // This is a special case. We need to make sure we're not calling .focus() if we're already focused on an element
-    // that possibly has "controls"
-    if (this.tabDirection === "backward") {
-      if (this.previousFocus && this.possiblyHasTabbableChildren(/** @type {HTMLElement} */ (this.previousFocus))) {
-        return
+    while(true) {
+      if (currentFocusIndex + addition >= tabbableElements.length) {
+        currentFocusIndex = 0;
+      } else if (currentFocusIndex + addition < 0) {
+        currentFocusIndex = tabbableElements.length - 1;
+      } else {
+        currentFocusIndex += addition;
       }
 
-      if (nextFocus && this.possiblyHasTabbableChildren(nextFocus)) {
-        return
+      this.previousFocus = this.currentFocus
+      const nextFocus = /** @type {HTMLElement} */ (tabbableElements[currentFocusIndex])
+
+      // This is a special case. We need to make sure we're not calling .focus() if we're already focused on an element
+      // that possibly has "controls"
+      if (this.tabDirection === "backward") {
+        if (this.previousFocus && this.possiblyHasTabbableChildren(/** @type {HTMLElement} */ (this.previousFocus))) {
+          return
+        }
+
+        if (nextFocus && this.possiblyHasTabbableChildren(nextFocus)) {
+          return
+        }
+      }
+
+      event.preventDefault()
+      this.currentFocus = nextFocus;
+      this.currentFocus?.focus({ preventScroll: this.preventScroll });
+
+      // @ts-expect-error
+      if ([...activeElements()].includes(this.currentFocus)) {
+        break
       }
     }
-
-    event.preventDefault()
-    this.currentFocus = nextFocus;
-    this.currentFocus?.focus({ preventScroll: this.preventScroll });
   }
 
 
