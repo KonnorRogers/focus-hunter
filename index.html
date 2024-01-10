@@ -226,6 +226,115 @@
         <br><br>
         <audio controls="" allowfullscreen="" playsinline="" src="./media/video-1.mp4"></audio>
       </div>
+
+      <h2>
+        Handling overflow elements
+      </h2>
+
+      <button class="js-activate-trap">
+        Activate Trap
+      </button>
+
+      <div class="trap">
+
+        Non-overflowing w/ <code>overflow: auto;</code>
+        <div style="overflow: auto; max-height: 100px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; padding: 4px;">
+          <button>Button</button>
+        </div>
+
+        <br><br>
+
+        <span>Overflowing w/ <code>overflow: auto;</code></span>
+        <br>
+        <div style="overflow: auto; max-height: 100px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; padding: 4px;">
+          <button>Button</button>
+          <button>Button</button>
+          <button>Button</button>
+          <button>Button</button>
+          <button>Button</button>
+          <button>Button</button>
+          <button>Button</button>
+          <button>Button</button>
+          <button>Button</button>
+          <button>Button</button>
+          <button>Button</button>
+          <button>Button</button>
+          <button>Button</button>
+          <button>Button</button>
+          <button>Button</button>
+          <button>Button</button>
+          <button>Button</button>
+          <button>Button</button>
+          <button>Button</button>
+          <button>Button</button>
+        </div>
+
+        <br><br>
+
+        <span><code>overflow scroll</code></span>
+        <br>
+        <div style="overflow: scroll; max-height: 100px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; padding: 4px;">
+          <button>Button</button>
+        </div>
+
+        <br><br>
+
+        <span><code>overflow scroll</code></span>
+        <br>
+        <div style="overflow: scroll; max-height: 100px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; padding: 4px;">
+          <button>Button</button>
+          <button>Button</button>
+          <button>Button</button>
+          <button>Button</button>
+          <button>Button</button>
+          <button>Button</button>
+          <button>Button</button>
+          <button>Button</button>
+          <button>Button</button>
+          <button>Button</button>
+          <button>Button</button>
+          <button>Button</button>
+          <button>Button</button>
+          <button>Button</button>
+          <button>Button</button>
+          <button>Button</button>
+          <button>Button</button>
+          <button>Button</button>
+          <button>Button</button>
+          <button>Button</button>
+        </div>
+
+        <br><br>
+
+        <span><code>overflow: hidden;</code></span>
+          <br>
+        <div style="overflow: hidden; max-height: 100px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; padding: 4px;">
+          <button>Button</button>
+          <button>Button</button>
+          <button>Button</button>
+          <button>Button</button>
+          <button>Button</button>
+          <button>Button</button>
+          <button>Button</button>
+          <button>Button</button>
+          <button>Button</button>
+          <button>Button</button>
+          <button>Button</button>
+          <button>Button</button>
+          <button>Button</button>
+          <button>Button</button>
+          <button>Button</button>
+          <button>Button</button>
+          <button>Button</button>
+          <button>Button</button>
+          <button>Button</button>
+          <button>Button</button>
+        </div>
+
+        <br><br>
+
+        <button class="js-deactivate-trap">Deactivate Trap</button>
+      </div>
     </main>
 
     

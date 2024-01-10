@@ -59,16 +59,11 @@ const computedStyleMap = /** @type {WeakMap<Element, CSSStyleDeclaration>} */ (n
 
 /**
  * @param {Element} el
+ * @returns {CSSStyleDeclaration}
  */
-function isVisible(el) {
-  // This is the fastest check, but isn't supported in Safari.
-  if (typeof el.checkVisibility === 'function') {
-    return el.checkVisibility({ checkOpacity: false, checkVisibilityCSS: true });
-  }
-
-  // Fallback "polyfill" for "checkVisibility"
+function getCachedComputedStyle(el) {
   /**
-   * @type {CSSStyleDeclaration | undefined}
+   * @type {undefined | CSSStyleDeclaration}
    */
   let computedStyle = computedStyleMap.get(el);
 
@@ -77,7 +72,58 @@ function isVisible(el) {
     computedStyleMap.set(el, computedStyle);
   }
 
+  return /** @type {CSSStyleDeclaration} */ (computedStyle);
+}
+
+/**
+ * @param {Element} el
+ */
+function isVisible(el) {
+  // This is the fastest check, but isn't supported in Safari.
+  if (typeof el.checkVisibility === 'function') {
+    return el.checkVisibility({ checkOpacity: false, checkVisibilityCSS: true });
+  }
+
+  // Fallback "polyfill" for "checkVisibility"
+  const computedStyle = getCachedComputedStyle(el);
+
   return computedStyle.visibility !== 'hidden' && computedStyle.display !== 'none';
+}
+
+/**
+ * While this behavior isn't standard in Safari / Chrome yet, I think it's the most reasonable
+ *   way of handling tabbable overflow areas. Browser sniffing seems gross, and it's the most
+ *   accessible way of handling overflow areas. [Konnor]
+ * @param {Element} el
+ * @return {boolean}
+ */
+function isOverflowingAndTabbable(el) {
+  const computedStyle = getCachedComputedStyle(el);
+
+  const { overflowY, overflowX } = computedStyle;
+
+  if (overflowY === 'scroll' || overflowX === 'scroll') {
+    return true;
+  }
+
+  if (overflowY !== 'auto' || overflowX !== 'auto') {
+    return false;
+  }
+
+  // Always overflow === "auto" by this point
+  const isOverflowingY = el.scrollHeight > el.clientHeight;
+
+  if (isOverflowingY && overflowY === 'auto') {
+    return true;
+  }
+
+  const isOverflowingX = el.scrollWidth > el.clientWidth;
+
+  if (isOverflowingX && overflowX === 'auto') {
+    return true;
+  }
+
+  return false;
 }
 
 
@@ -89,39 +135,33 @@ function isVisible(el) {
 function isTabbable(el) {
   const tag = el.tagName.toLowerCase();
 
-  // Elements that are hidden have no offsetParent and are not tabbable
-  // offsetParent() is added because otherwise it misses elements in Safari
-  if (
-    !isVisible(/** @type {HTMLElement} */ (el))
-  )
-  {
-    return false;
-  }
-
-  // Elements with a -1 tab index are not tabbable
   const tabindex = Number(el.getAttribute('tabindex'));
-  const hasTabindex = el.hasAttribute("tabindex");
+  const hasTabindex = el.hasAttribute('tabindex');
 
+
+  // elements with a tabindex attribute that is either NaN or <= -1 are not tabbable
   if (hasTabindex && (isNaN(tabindex) || tabindex <= -1)) {
     return false;
   }
-
-  if (tabindex <= -1) {
-    return false;
-  }
-
 
   // Elements with a disabled attribute are not tabbable
   if (el.hasAttribute('disabled')) {
     return false;
   }
 
-  if (el.matches("[inert]")) {
+  if (el.closest("[inert]")) {
     return false
   }
 
   // Radios without a checked attribute are not tabbable
   if (tag === 'input' && el.getAttribute('type') === 'radio' && !el.hasAttribute('checked')) {
+    return false;
+  }
+
+  // Elements that are hidden have no offsetParent and are not tabbable
+  // offsetParent() is added because otherwise it misses elements in Safari
+  if (!isVisible(/** @type {HTMLElement} */ (el)))
+  {
     return false;
   }
 
@@ -146,7 +186,14 @@ function isTabbable(el) {
   }
 
   // At this point, the following elements are considered tabbable
-  return ['button', 'input', 'select', 'textarea', 'a', 'audio', 'video', 'summary', 'iframe', 'object', 'embed'].includes(tag);
+  const isNativelyTabbable = ['button', 'input', 'select', 'textarea', 'a', 'audio', 'video', 'summary', 'iframe', 'object', 'embed'].includes(tag);
+
+  if (isNativelyTabbable) {
+    return true;
+  }
+
+  // We save the overflow checks for last, because they're the most expensive
+  return isOverflowingAndTabbable(el);
 }
 
 /**
@@ -195,8 +242,8 @@ function sortByTabIndex(a, b) {
   */
 function* walk(el, rootElement, tabbableElements, checkedElements) {
   if (el instanceof Element) {
-    // if the element has "inert" we can just no-op it and all its children.
-    if (el.hasAttribute('inert')) {
+    // if the element has "inert" or any of its parents have "inert", we can just no-op it and all its children.
+    if (el.hasAttribute('inert') || el.closest("[inert]")) {
       return;
     }
 
@@ -472,47 +519,43 @@ class Trap {
 
     const tabbableElements = [...getTabbableElements(this.rootElement)];
 
-    const start = tabbableElements[0];
-
     let currentFocusIndex = tabbableElements.findIndex((el) => el === currentFocus);
-
-    if (currentFocusIndex === -1) {
-      this.currentFocus = (/** @type {HTMLElement} */ (start));
-
-      event.preventDefault();
-      this.currentFocus?.focus?.({ preventScroll: this.preventScroll });
-      return;
-    }
 
     const addition = this.tabDirection === 'forward' ? 1 : -1;
 
-    if (currentFocusIndex + addition >= tabbableElements.length) {
-      currentFocusIndex = 0;
-    } else if (currentFocusIndex + addition < 0) {
-      currentFocusIndex = tabbableElements.length - 1;
-    } else {
-      currentFocusIndex += addition;
-    }
-
-    const previousFocus = this.currentFocus;
-    const nextFocus = /** @type {HTMLElement} */ (tabbableElements[currentFocusIndex]);
-
-
-    // This is a special case. We need to make sure we're not calling .focus() if we're already focused on an element
-    // that possibly has "controls"
-    if (this.tabDirection === "backward") {
-      if (previousFocus && this.possiblyHasTabbableChildren(previousFocus)) {
-        return
+    while(true) {
+      if (currentFocusIndex + addition >= tabbableElements.length) {
+        currentFocusIndex = 0;
+      } else if (currentFocusIndex + addition < 0) {
+        currentFocusIndex = tabbableElements.length - 1;
+      } else {
+        currentFocusIndex += addition;
       }
 
-      if (nextFocus && this.possiblyHasTabbableChildren(nextFocus)) {
-        return
+      this.previousFocus = this.currentFocus;
+      const nextFocus = /** @type {HTMLElement} */ (tabbableElements[currentFocusIndex]);
+
+      // This is a special case. We need to make sure we're not calling .focus() if we're already focused on an element
+      // that possibly has "controls"
+      if (this.tabDirection === "backward") {
+        if (this.previousFocus && this.possiblyHasTabbableChildren(/** @type {HTMLElement} */ (this.previousFocus))) {
+          return
+        }
+
+        if (nextFocus && this.possiblyHasTabbableChildren(nextFocus)) {
+          return
+        }
+      }
+
+      event.preventDefault();
+      this.currentFocus = nextFocus;
+      this.currentFocus?.focus({ preventScroll: this.preventScroll });
+
+      // @ts-expect-error
+      if ([...activeElements()].includes(this.currentFocus)) {
+        break
       }
     }
-
-    event.preventDefault();
-    this.currentFocus = nextFocus;
-    this.currentFocus?.focus({ preventScroll: this.preventScroll });
   }
 
 
