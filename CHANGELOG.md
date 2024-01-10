@@ -1,4 +1,4 @@
-## 1.1.1
+## 1.1.2
 
 - Fixed tabbing into overflowing elements, and reduced the chances of the focus getting "stuck"
 on unrecognized / unfocusable elements.
